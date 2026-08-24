@@ -1,0 +1,49 @@
+# Python/editor noise
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.pytest_cache/
+.ruff_cache/
+
+# Local experiment state
+.cache/
+cache/
+scratch/
+calibration/
+logs/
+offload/
+outputs/
+artifacts/
+wandb/
+mlruns/
+*.log
+*.tmp
+*.partial
+*.incomplete
+
+# Model and tensor artifacts: never commit weights.
+*.safetensors
+*.safetensors.index.json
+*.gguf
+*.ggml
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.onnx
+*.engine
+*.plan
+model-*-of-*.*
+pytorch_model*.bin
+consolidated*.pth
+
+# Benchmark bulk data stays under /data. Curated JSON/Markdown is allowed.
+benchmarks/raw/
+reports/raw/
+
