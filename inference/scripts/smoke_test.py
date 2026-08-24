@@ -47,7 +47,8 @@ def main() -> int:
             ],
             "temperature": 0,
             "seed": 42,
-            "max_tokens": 48,
+            "max_tokens": 128,
+            "chat_template_kwargs": {"enable_thinking": False},
         }
         first = request_json(f"{args.base_url}/chat/completions", payload, args.timeout)
         second = request_json(f"{args.base_url}/chat/completions", payload, args.timeout)
@@ -55,6 +56,8 @@ def main() -> int:
         second_text = second["choices"][0]["message"]["content"]
         if not first_text.strip():
             raise RuntimeError("vLLM returned an empty generation")
+        if "391" not in first_text:
+            raise RuntimeError(f"vLLM response did not contain the correct result 391: {first_text!r}")
         result.update(
             {
                 "status": "passed",

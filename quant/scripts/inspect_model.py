@@ -194,6 +194,8 @@ def inspect_checkpoint(model_path: Path, instantiate_meta: bool) -> tuple[dict[s
     extra_shards = sorted(set(top_level_shards) - set(shards))
     if missing_shards:
         errors.append(f"missing {len(missing_shards)} referenced shard(s)")
+    if extra_shards:
+        errors.append(f"{len(extra_shards)} unreferenced Safetensors shard(s) present")
 
     actual_map: dict[str, str] = {}
     duplicate_tensors: list[str] = []
@@ -262,6 +264,12 @@ def inspect_checkpoint(model_path: Path, instantiate_meta: bool) -> tuple[dict[s
         errors.append(f"{len(mapping_mismatches)} tensor-to-shard mapping mismatch(es)")
     if duplicate_tensors:
         errors.append(f"{len(duplicate_tensors)} duplicate tensor name(s) across shards")
+    declared_weight_bytes = int(index.get("metadata", {}).get("total_size", 0))
+    actual_weight_bytes = sum(dtype_bytes.values())
+    if declared_weight_bytes and declared_weight_bytes != actual_weight_bytes:
+        errors.append(
+            f"index declares {declared_weight_bytes} tensor bytes; shard headers describe {actual_weight_bytes}"
+        )
 
     text = config.get("text_config", config)
     vision = config.get("vision_config")
@@ -275,7 +283,7 @@ def inspect_checkpoint(model_path: Path, instantiate_meta: bool) -> tuple[dict[s
         "transformers_version_recorded": config.get("transformers_version"),
         "checkpoint": {
             "index_present": index_present,
-            "declared_weight_bytes": int(index.get("metadata", {}).get("total_size", 0)),
+            "declared_weight_bytes": declared_weight_bytes,
             "shard_bytes": sum(item["size_bytes"] for item in shard_reports),
             "directory_bytes": sum(path.stat().st_size for path in model_path.rglob("*") if path.is_file()),
             "shard_count": len(shards),

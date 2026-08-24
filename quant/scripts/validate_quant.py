@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -16,6 +17,7 @@ from inspect_model import inspect_checkpoint
 DISPATCH_PATTERN = re.compile(
     r"Selected CutlassInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8"
 )
+PROCESSOR_CONFIG_FILES = ("preprocessor_config.json", "video_preprocessor_config.json")
 
 
 def find_quantization_config(config: dict[str, Any]) -> dict[str, Any] | None:
@@ -88,6 +90,36 @@ def main() -> int:
     if not args.synthetic and len(mtp_names) != 15:
         errors.append(f"production output must preserve 15 MTP tensors; found {len(mtp_names)}")
 
+    processor_configs: dict[str, dict[str, Any]] = {}
+    if not args.synthetic:
+        for name in PROCESSOR_CONFIG_FILES:
+            path = args.model_path / name
+            if not path.is_file():
+                errors.append(f"required processor config is missing: {name}")
+                continue
+            try:
+                value = json.loads(path.read_bytes())
+            except (OSError, json.JSONDecodeError) as exc:
+                errors.append(f"invalid processor config {name}: {exc}")
+                continue
+            if not isinstance(value, dict):
+                errors.append(f"processor config {name} is not a JSON object")
+            raw = path.read_bytes()
+            processor_configs[name] = {"size_bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+
+    target_modules: list[str] = []
+    if not args.synthetic:
+        index_path = args.model_path / "model.safetensors.index.json"
+        if index_path.is_file():
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            target_modules = sorted(
+                name.removesuffix(".weight_scale")
+                for name in index.get("weight_map", {})
+                if name.endswith(".weight_scale")
+            )
+        if len(target_modules) != 256:
+            errors.append(f"expected 256 quantized target modules; found {len(target_modules)}")
+
     dispatch_verified = None
     if args.vllm_log:
         log_text = args.vllm_log.read_text(encoding="utf-8", errors="replace")
@@ -101,6 +133,8 @@ def main() -> int:
         "checkpoint_complete": complete,
         "quantization_config": quant_config,
         "mtp_tensor_count": len(mtp_names),
+        "processor_configs": processor_configs,
+        "quantized_target_count": len(target_modules),
         "cutlass_w8a8_dispatch_verified": dispatch_verified,
         "errors": errors,
         "valid": not errors,

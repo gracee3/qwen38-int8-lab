@@ -6,12 +6,14 @@ from __future__ import annotations
 import argparse
 import contextlib
 import datetime as dt
+import hashlib
 import importlib.metadata
 import json
 import os
 import re
 import shutil
 import signal
+import statistics
 import subprocess
 import sys
 import threading
@@ -34,6 +36,8 @@ IMPORTANT_PACKAGES = (
     "safetensors",
     "huggingface-hub",
 )
+
+PROCESSOR_CONFIG_FILES = ("preprocessor_config.json", "video_preprocessor_config.json")
 
 
 def utc_stamp() -> str:
@@ -431,6 +435,28 @@ def run_synthetic_smoke(
     }
 
 
+def dataset_statistics(dataset: Any, calibration: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
+    lengths = [len(dataset[index]["input_ids"]) for index in range(len(dataset))]
+    if len(lengths) != profile["num_samples"]:
+        raise RuntimeError(f"Selected {len(lengths)} calibration samples; expected {profile['num_samples']}")
+    return {
+        "dataset": calibration["dataset"] if not profile.get("local_prompts") else "local_smoke_prompts",
+        "revision": calibration.get("revision") if not profile.get("local_prompts") else None,
+        "split": calibration["split"] if not profile.get("local_prompts") else None,
+        "seed": calibration["seed"],
+        "sample_count": len(lengths),
+        "source_fingerprint": getattr(dataset, "_source_fingerprint", None),
+        "tokenized_fingerprint": getattr(dataset, "_fingerprint", None),
+        "token_lengths": {
+            "minimum": min(lengths),
+            "maximum": max(lengths),
+            "mean": statistics.fmean(lengths),
+            "median": statistics.median(lengths),
+            "at_maximum": sum(length == profile["max_seq_length"] for length in lengths),
+        },
+    }
+
+
 def load_calibration_dataset(config: dict[str, Any], profile: dict[str, Any], tokenizer):
     from datasets import Dataset, load_dataset
 
@@ -444,7 +470,9 @@ def load_calibration_dataset(config: dict[str, Any], profile: dict[str, Any], to
             calibration["dataset"],
             split=calibration["split"],
             cache_dir=calibration["cache_dir"],
+            revision=calibration["revision"],
         ).shuffle(seed=calibration["seed"]).select(range(count))
+    source_fingerprint = getattr(dataset, "_fingerprint", None)
 
     def preprocess(example: dict[str, Any]) -> dict[str, str]:
         messages = example.get("messages")
@@ -462,7 +490,26 @@ def load_calibration_dataset(config: dict[str, Any], profile: dict[str, Any], to
             add_special_tokens=False,
         )
 
-    return dataset.map(tokenize, remove_columns=dataset.column_names)
+    dataset = dataset.map(tokenize, remove_columns=dataset.column_names)
+    # Force every selected row through the Arrow/cache layer before the large
+    # checkpoint is loaded. Dataset content is deliberately never logged.
+    materialized = [dataset[index] for index in range(len(dataset))]
+    dataset = Dataset.from_list(materialized)
+    dataset._source_fingerprint = source_fingerprint
+    return dataset
+
+
+def prepare_calibration_inputs(config: dict[str, Any], profile: dict[str, Any]):
+    """Complete the tokenizer/dataset-only preflight before model allocation."""
+    from transformers import AutoTokenizer
+
+    source = Path(config["model"]["source"])
+    started = time.monotonic()
+    tokenizer = AutoTokenizer.from_pretrained(source, local_files_only=True, trust_remote_code=False)
+    dataset = load_calibration_dataset(config, profile, tokenizer)
+    details = dataset_statistics(dataset, config["calibration"], profile)
+    details["preflight_seconds"] = time.monotonic() - started
+    return tokenizer, dataset, details
 
 
 def load_real_inputs(config: dict[str, Any], profile: dict[str, Any]):
@@ -470,9 +517,10 @@ def load_real_inputs(config: dict[str, Any], profile: dict[str, Any]):
     import transformers
     from compressed_tensors.offload import get_device_map
     from llmcompressor.utils import load_context
-    from transformers import AutoConfig, AutoTokenizer
+    from transformers import AutoConfig
 
     source = Path(config["model"]["source"])
+    tokenizer, dataset, dataset_details = prepare_calibration_inputs(config, profile)
     offload_dir = Path(config["memory"]["offload_dir"])
     offload_dir.mkdir(parents=True, exist_ok=True)
     hf_config = AutoConfig.from_pretrained(source, local_files_only=True, trust_remote_code=False)
@@ -489,17 +537,13 @@ def load_real_inputs(config: dict[str, Any], profile: dict[str, Any]):
             offload_folder=offload_dir,
         )
     load_seconds = time.monotonic() - started
-    tokenizer = AutoTokenizer.from_pretrained(source, local_files_only=True, trust_remote_code=False)
-    dataset_started = time.monotonic()
-    dataset = load_calibration_dataset(config, profile, tokenizer)
-    dataset_seconds = time.monotonic() - dataset_started
     device_map_counts: dict[str, int] = {}
     for onload_device, offload_device in get_device_map(model).values():
         placement = f"{onload_device}->{offload_device}"
         device_map_counts[placement] = device_map_counts.get(placement, 0) + 1
     return model, tokenizer, dataset, {
         "load_seconds": load_seconds,
-        "dataset_seconds": dataset_seconds,
+        "calibration_dataset": dataset_details,
         "compressed_tensors_device_map_counts": device_map_counts,
     }
 
@@ -599,6 +643,31 @@ def inject_mtp_tensors(source_dir: Path, output_dir: Path) -> dict[str, Any]:
     return {"tensor_count": len(tensors), "bytes": added_bytes, "shard": preserved_name}
 
 
+def copy_processor_configs(source_dir: Path, output_dir: Path) -> dict[str, dict[str, Any]]:
+    """Copy required processor JSON files exactly, rejecting path escapes."""
+    source_root = source_dir.resolve(strict=True)
+    copied: dict[str, dict[str, Any]] = {}
+    for name in PROCESSOR_CONFIG_FILES:
+        source_path = source_dir / name
+        if not source_path.exists():
+            raise FileNotFoundError(f"Required processor config is missing: {source_path}")
+        resolved = source_path.resolve(strict=True)
+        try:
+            resolved.relative_to(source_root)
+        except ValueError as exc:
+            raise RuntimeError(f"Processor config symlink escapes source checkpoint: {source_path}") from exc
+        raw = resolved.read_bytes()
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict):
+            raise TypeError(f"{name} must contain a JSON object, found {type(parsed).__name__}")
+        destination = output_dir / name
+        destination.write_bytes(raw)
+        if destination.read_bytes() != raw:
+            raise RuntimeError(f"Byte-for-byte processor copy verification failed: {name}")
+        copied[name] = {"size_bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+    return copied
+
+
 def run_full_model(
     config: dict[str, Any], profile_name: str, profile: dict[str, Any], output_dir: Path
 ) -> dict[str, Any]:
@@ -633,6 +702,7 @@ def run_full_model(
     )
     tokenizer.save_pretrained(staging)
     mtp = inject_mtp_tensors(source, staging)
+    processor_configs = copy_processor_configs(source, staging)
     if profile_name != "quality":
         write_metadata(
             staging / "EXPERIMENTAL_NON_PRODUCTION.json",
@@ -658,6 +728,7 @@ def run_full_model(
         "max_seq_length": profile["max_seq_length"],
         "serialization_max_shard_size": max_shard_size,
         "mtp_reinjection": mtp,
+        "processor_configs": processor_configs,
         "shared_load": shared,
     }
 
@@ -670,19 +741,33 @@ def write_metadata(path: Path, metadata: dict[str, Any]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--profile", choices=("smoke", "tiny_source", "small", "quality"), default="smoke")
+    parser.add_argument(
+        "--profile", choices=("smoke", "tiny_source", "small", "quality"), default="smoke"
+    )
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--execute-full", action="store_true", help="Required safety acknowledgement for non-synthetic work")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--load-trace-only", action="store_true")
+    parser.add_argument("--dataset-preflight-only", action="store_true")
     args = parser.parse_args()
 
     if args.load_trace_only and (args.execute_full or args.output is not None):
         parser.error("--load-trace-only is mutually exclusive with --execute-full and --output")
     if args.load_trace_only and args.profile != "tiny_source":
         parser.error("--load-trace-only is restricted to --profile tiny_source")
+    if args.dataset_preflight_only and (args.load_trace_only or args.execute_full or args.output is not None):
+        parser.error("--dataset-preflight-only cannot be combined with execution/output options")
 
     config = read_yaml(args.config)
+    profile = config["calibration"]["profiles"][args.profile]
+    if args.dataset_preflight_only:
+        _tokenizer, _dataset, preflight = prepare_calibration_inputs(config, profile)
+        preflight_path = Path("/work/results") / f"dataset-preflight-{args.profile}-{utc_stamp()}.json"
+        write_metadata(preflight_path, preflight)
+        print(json.dumps(preflight, indent=2, sort_keys=True))
+        print(f"dataset_preflight_metadata: {preflight_path}")
+        return 0
+
     source = Path(config["model"]["source"])
     source_report, complete = inspect_checkpoint(source, instantiate_meta=False)
     if not complete:
@@ -728,7 +813,6 @@ def main() -> int:
     if args.plan_only:
         return 0
 
-    profile = config["calibration"]["profiles"][args.profile]
     synthetic = bool(profile.get("synthetic_model"))
     if not synthetic and not args.execute_full and not args.load_trace_only:
         raise SystemExit("Refusing real-checkpoint quantization without --execute-full")

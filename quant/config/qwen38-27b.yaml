@@ -68,6 +68,7 @@ calibration:
   cache_dir: /work/cache/huggingface/datasets
   local_smoke_file: /app/quant/recipes/smoke_prompts.jsonl
   dataset: HuggingFaceH4/ultrachat_200k
+  revision: 8049631c405ae6576f93f445c6b8166f76f5505a
   split: train_sft
   profiles:
     smoke:
