@@ -9,6 +9,8 @@ sha256:db80a41f8428644cebcb3d75b0b62df334ab6c0e75785951eb25f48bfbd42407
 
 Application code is bind-mounted read-only at `/app`; it is not copied into dependency layers. Each image installs its resolved lock file while the adjacent `requirements.in` explains direct intent. BuildKit pip caches are retained, and revision labels are applied after dependency installation so a new Git commit does not invalidate the expensive layer.
 
+The locked rebuild and runtime gates were executed at Git `5bfa399f561fcd935e8af883df1c58d8afe97610`. Local image manifest IDs were `sha256:7c0ac3089184466e7348dd98ba0219311e69fa32b7395a7674956467a9e02088` (quant) and `sha256:60508d8dcbbb0a985955e9cf2f66e561a66c3f1c99bd7ec8fa5020e991a0ef4d` (vLLM); both carry that revision label.
+
 ## Quantization image
 
 Direct compatibility contract:

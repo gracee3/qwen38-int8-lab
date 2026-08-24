@@ -12,12 +12,12 @@ Observed serialization metadata:
 - input activations: symmetric 8-bit, dynamic per-token
 - artifact size: about 1.7 MiB; explicitly marked non-production
 
-Measured peaks for the passing sequential run (`20260824T202232Z`):
+Measured peaks for the committed-lock sequential run (`20260824T203507Z`, Git `5bfa399f561fcd935e8af883df1c58d8afe97610`):
 
-- process RSS: 2,111,205,376 bytes (about 1.97 GiB)
+- process RSS: 2,110,812,160 bytes (about 1.97 GiB)
 - GPU 0: 364 MiB
 - GPU 1: 266 MiB
-- quantization elapsed time: 3.10 seconds
+- quantization elapsed time: 3.17 seconds
 
 These measurements validate instrumentation and orchestration only. They are not estimates of the full 27B run.
 
