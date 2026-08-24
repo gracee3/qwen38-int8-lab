@@ -67,6 +67,9 @@ just quant-plan
 just quant-smoke
 just load-trace   # complete BF16 load + two-prompt sequential trace; no GPTQ/output
 just quant-tiny   # two-sample real-source experimental artifact under /work/scratch
+just dataset-preflight quality  # pin/select/tokenize all 512 rows; no model load
+just quant-small  # 32-sample x 512-token scaling candidate under /work/scratch
+just quant        # authorized 512-sample x 2,048-token quality candidate
 
 just build-vllm
 just validate
@@ -77,11 +80,17 @@ just bench
 
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`.
 
-`just quant-smoke` is designed to quantize a tiny synthetic Qwen3.5/3.8-shaped model with the real package APIs and serialization path. It is not a partially quantized 27B checkpoint. Experimental real-source profiles require an explicit destination below `/work/scratch` and are marked non-production. The guarded `just quant` command is reserved for the measured quality run and refuses to overwrite an existing output.
+`just quant-smoke` is designed to quantize a tiny synthetic Qwen3.5/3.8-shaped model with the real package APIs and serialization path. It is not a partially quantized 27B checkpoint. Experimental real-source profiles require an explicit destination below `/work/scratch` and are marked non-production. The guarded `just quant` command is reserved for the measured quality run and refuses to overwrite an existing output. The external dataset is pinned to commit `8049631c405ae6576f93f445c6b8166f76f5505a`; run metadata records both dataset fingerprints, seed, count, and aggregate token lengths, never sample text.
 
 `just load-trace` is the production-faithful, non-executing real-source safety gate. It loads the complete BF16 checkpoint with the same loader, tokenizer, local two-prompt dataset, 80 GiB CPU ceiling, and `auto_offload` mapping used by `just quant-tiny`, then invokes LLM Compressor's sequential tracer without GPTQ or serialization. `just quant-tiny` always creates a timestamped, explicitly non-production checkpoint below `/work/scratch`; neither command writes to the production model destination.
 
-Real-checkpoint serialization uses the configured 1 GB shard limit, hidden incomplete staging, and an atomic final rename. Run metadata includes process RSS and `VmSwap`, host swap-I/O deltas, memory PSI totals, available RAM, swap growth, GPU memory, free disk, and any sustained safety-trigger reason. The interrupt thresholds remain 8 GiB available RAM or more than 4 GiB swap growth for 10 seconds.
+Real-checkpoint serialization uses the configured 1 GB shard limit, hidden incomplete staging, and an atomic final rename. Before that rename, it restores 15 MTP tensors and copies both processor JSON files byte-for-byte from the source after validating that they are in-tree JSON objects. Strict validation requires complete index/shard integrity, W8A8 metadata, exactly 256 quantized targets, 15 MTP tensors, and both processor files. Run metadata includes process RSS and `VmSwap`, host swap-I/O deltas, memory PSI totals, available RAM, swap growth, GPU memory, free disk, and any sustained safety-trigger reason. The interrupt thresholds remain 8 GiB available RAM or more than 4 GiB swap growth for 10 seconds.
+
+The supported serving command uses TP2, a 2,048-token context, 0.88 GPU-memory utilization, BF16 KV cache, seed 42, eager mode, and disables prefix caching, chunked prefill, speculation, and the FlashInfer sampler. `just smoke` sends the same non-thinking request twice with a 128-token allowance and requires a deterministic response containing `391`.
+
+For the complete guarded sequence, install a timestamped copy of `scripts/quality_gate_supervisor.sh` under `/data/qwen38-int8-lab`, set `EXPECTED_COMMIT` to the merged `main` commit, and launch it in a newly named tmux session. The supervisor performs fresh host/repository/storage gates before tiny, small, and quality calibration, changes swappiness only around each calibration child process group, restores it exactly, validates direct vLLM loading, and halts without retry on the first failure.
+
+Passing this workflow means the artifact is a functional quality candidate: it is self-contained, loads through the intended native W8A8 path, produces the deterministic arithmetic answer, and completes performance measurement. It is not a standardized accuracy result; accuracy evaluation and vision/video inference remain separate work.
 
 ## Reproducibility
 
@@ -98,7 +107,7 @@ As of 2026-08-24:
 - The host has two visible RTX 3090 GPUs and an NVIDIA-capable Docker runtime.
 - Both pinned Docker images build and see both SM86 GPUs. The exact resolved environments are checked in.
 - The sequential synthetic gate passes calibration, GPTQ W8A8 compression, Safetensors serialization, index inspection, and quantization-metadata validation. It recorded about 2.0 GiB peak process RSS and 364/266 MiB peak GPU memory.
-- vLLM 0.27.1 registers the Qwen architecture and, on this host, selects `CutlassInt8ScaledMMLinearKernel` for the intended `CompressedTensorsW8A8Int8` scheme. Loading and dispatching the eventual 27B checkpoint remain untested and are not claimed.
-- No full 27B quantization has been started.
+- A two-sample experimental artifact completed and loaded with vLLM TP2 through `CutlassInt8ScaledMMLinearKernel`; it exposed the processor-file packaging defect repaired by the current quality-gate work.
+- The 32-sample scaling and 512-sample quality calibrations have not yet been run.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
