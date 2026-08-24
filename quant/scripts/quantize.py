@@ -445,8 +445,12 @@ def run_full_model(
     return {
         "elapsed_seconds": time.monotonic() - started,
         "output_dir": str(output_dir),
-        "artifact_kind": "qwen38_27b_w8a8_compressed_tensors",
-        "complete_production_model": True,
+        "artifact_kind": (
+            "qwen38_27b_w8a8_quality_candidate"
+            if profile_name == "quality"
+            else "qwen38_27b_w8a8_experimental"
+        ),
+        "complete_production_model": profile_name == "quality",
         "profile": profile_name,
         "calibration_samples": profile["num_samples"],
         "max_seq_length": profile["max_seq_length"],
@@ -515,6 +519,11 @@ def main() -> int:
     synthetic = bool(profile.get("synthetic_model"))
     if not synthetic and not args.execute_full:
         raise SystemExit("Refusing real-checkpoint quantization without --execute-full")
+    if not synthetic and args.profile != "quality":
+        if args.output is None:
+            raise SystemExit("Experimental real-source profiles require an explicit --output under /work/scratch")
+        if not args.output.is_absolute() or Path("/work/scratch") not in args.output.parents:
+            raise SystemExit("Experimental real-source output must be a child of /work/scratch")
 
     stamp = utc_stamp()
     output = args.output

@@ -44,7 +44,7 @@ SmoothQuant is disabled in the first recipe. It can be reconsidered only with ex
 3. A 32-sample, 512-token cached experiment estimates quality and memory.
 4. The quality candidate uses 512 representative chat samples at up to 2,048 tokens, cached under `/work/cache`.
 
-The full quality run is not authorized by an ordinary script invocation: `quantize.py` requires `--execute-full`, refuses an existing output, serializes under an incomplete staging name, restores MTP, and only then renames to the final path.
+The full quality run is not authorized by an ordinary script invocation: `quantize.py` requires `--execute-full`, refuses an existing output, serializes under an incomplete staging name, restores MTP, and only then renames to the final path. Non-quality real-source profiles additionally require an explicit output below `/work/scratch` and are recorded as experimental rather than production-complete.
 
 ## Runtime acceptance
 
