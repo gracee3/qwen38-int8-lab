@@ -1,0 +1,5 @@
+{"messages":[{"role":"system","content":"You are a precise technical assistant."},{"role":"user","content":"Explain why an INT8 matrix multiply needs scale factors in two sentences."}]}
+{"messages":[{"role":"user","content":"Write a Python function that returns the first ten Fibonacci numbers."}]}
+{"messages":[{"role":"user","content":"A server has two 24 GB GPUs. Briefly distinguish tensor parallel inference from sequential quantization."}]}
+{"messages":[{"role":"user","content":"Summarize the tradeoff between calibration size and quantization time."}]}
+

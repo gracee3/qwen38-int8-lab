@@ -1,0 +1,5761 @@
+{
+  "architecture": "Qwen3_5ForConditionalGeneration",
+  "architecture_summary": {
+    "gdn_recurrent_present": true,
+    "hidden_size": 5120,
+    "intermediate_size": 17408,
+    "layer_type_counts": {
+      "full_attention": 16,
+      "linear_attention": 48
+    },
+    "max_position_embeddings": 262144,
+    "mtp_layers": 1,
+    "rms_norm_eps": 1e-06,
+    "text_layers": 64,
+    "tie_word_embeddings": false,
+    "vision_layers": 27,
+    "vision_present": true,
+    "vocab_size": 248320
+  },
+  "checkpoint": {
+    "declared_weight_bytes": 55562855904,
+    "directory_bytes": 55586118542,
+    "dtype_bytes": {
+      "BF16": 55562855904
+    },
+    "dtype_counts": {
+      "BF16": 1199
+    },
+    "extra_shards": [],
+    "index_present": true,
+    "mapping_mismatches": [],
+    "missing_index_tensors": [],
+    "missing_shards": [],
+    "shard_bytes": 55563006776,
+    "shard_count": 18,
+    "shards": [
+      {
+        "header_bytes": 45392,
+        "name": "model-00001-of-00018.safetensors",
+        "size_bytes": 3966730552,
+        "tensor_count": 392
+      },
+      {
+        "header_bytes": 6144,
+        "name": "model-00002-of-00018.safetensors",
+        "size_bytes": 3043080328,
+        "tensor_count": 47
+      },
+      {
+        "header_bytes": 144,
+        "name": "model-00003-of-00018.safetensors",
+        "size_bytes": 2542796952,
+        "tensor_count": 1
+      },
+      {
+        "header_bytes": 9048,
+        "name": "model-00004-of-00018.safetensors",
+        "size_bytes": 3988973152,
+        "tensor_count": 69
+      },
+      {
+        "header_bytes": 4816,
+        "name": "model-00005-of-00018.safetensors",
+        "size_bytes": 2099339864,
+        "tensor_count": 37
+      },
+      {
+        "header_bytes": 9944,
+        "name": "model-00006-of-00018.safetensors",
+        "size_bytes": 3979553696,
+        "tensor_count": 76
+      },
+      {
+        "header_bytes": 3944,
+        "name": "model-00007-of-00018.safetensors",
+        "size_bytes": 2108759344,
+        "tensor_count": 30
+      },
+      {
+        "header_bytes": 9944,
+        "name": "model-00008-of-00018.safetensors",
+        "size_bytes": 3979553696,
+        "tensor_count": 76
+      },
+      {
+        "header_bytes": 3944,
+        "name": "model-00009-of-00018.safetensors",
+        "size_bytes": 2108759344,
+        "tensor_count": 30
+      },
+      {
+        "header_bytes": 9944,
+        "name": "model-00010-of-00018.safetensors",
+        "size_bytes": 3979553696,
+        "tensor_count": 76
+      },
+      {
+        "header_bytes": 3944,
+        "name": "model-00011-of-00018.safetensors",
+        "size_bytes": 2108759344,
+        "tensor_count": 30
+      },
+      {
+        "header_bytes": 9944,
+        "name": "model-00012-of-00018.safetensors",
+        "size_bytes": 3979553696,
+        "tensor_count": 76
+      },
+      {
+        "header_bytes": 3944,
+        "name": "model-00013-of-00018.safetensors",
+        "size_bytes": 2108759344,
+        "tensor_count": 30
+      },
+      {
+        "header_bytes": 9944,
+        "name": "model-00014-of-00018.safetensors",
+        "size_bytes": 3979553696,
+        "tensor_count": 76
+      },
+      {
+        "header_bytes": 3944,
+        "name": "model-00015-of-00018.safetensors",
+        "size_bytes": 2108759344,
+        "tensor_count": 30
+      },
+      {
+        "header_bytes": 10048,
+        "name": "model-00016-of-00018.safetensors",
+        "size_bytes": 3979564040,
+        "tensor_count": 77
+      },
+      {
+        "header_bytes": 3944,
+        "name": "model-00017-of-00018.safetensors",
+        "size_bytes": 2108759344,
+        "tensor_count": 30
+      },
+      {
+        "header_bytes": 1752,
+        "name": "model-00018-of-00018.safetensors",
+        "size_bytes": 3392197344,
+        "tensor_count": 16
+      }
+    ],
+    "tensor_count": 1199,
+    "unindexed_tensors": []
+  },
+  "complete": true,
+  "configured_dtype": "bfloat16",
+  "errors": [],
+  "inspected_at": "2026-08-24T19:48:10.251723+00:00",
+  "metadata_inferred_linear_modules": [
+    {
+      "component": "lm_head",
+      "name": "lm_head",
+      "shape": [
+        248320,
+        5120
+      ],
+      "type": "Linear (lm_head)"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.0.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.0.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.0.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.0.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.0.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.0.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.0.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.0.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.1.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.1.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.1.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.1.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.1.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.1.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.1.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.1.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.10.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.10.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.10.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.10.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.10.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.10.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.10.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.10.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.11.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.11.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.11.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.11.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.11.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.11.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.11.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.12.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.12.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.12.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.12.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.12.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.12.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.12.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.12.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.13.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.13.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.13.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.13.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.13.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.13.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.13.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.13.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.14.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.14.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.14.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.14.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.14.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.14.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.14.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.14.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.15.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.15.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.15.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.15.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.15.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.15.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.15.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.16.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.16.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.16.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.16.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.16.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.16.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.16.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.16.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.17.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.17.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.17.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.17.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.17.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.17.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.17.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.17.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.18.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.18.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.18.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.18.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.18.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.18.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.18.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.18.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.19.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.19.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.19.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.19.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.19.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.19.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.19.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.2.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.2.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.2.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.2.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.2.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.2.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.2.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.2.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.20.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.20.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.20.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.20.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.20.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.20.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.20.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.20.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.21.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.21.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.21.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.21.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.21.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.21.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.21.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.21.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.22.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.22.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.22.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.22.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.22.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.22.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.22.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.22.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.23.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.23.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.23.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.23.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.23.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.23.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.23.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.24.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.24.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.24.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.24.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.24.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.24.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.24.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.24.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.25.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.25.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.25.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.25.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.25.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.25.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.25.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.25.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.26.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.26.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.26.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.26.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.26.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.26.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.26.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.26.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.27.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.27.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.27.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.27.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.27.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.27.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.27.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.28.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.28.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.28.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.28.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.28.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.28.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.28.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.28.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.29.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.29.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.29.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.29.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.29.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.29.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.29.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.29.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.3.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.3.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.3.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.3.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.3.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.3.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.3.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.30.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.30.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.30.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.30.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.30.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.30.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.30.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.30.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.31.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.31.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.31.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.31.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.31.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.31.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.31.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.32.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.32.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.32.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.32.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.32.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.32.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.32.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.32.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.33.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.33.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.33.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.33.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.33.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.33.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.33.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.33.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.34.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.34.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.34.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.34.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.34.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.34.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.34.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.34.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.35.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.35.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.35.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.35.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.35.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.35.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.35.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.36.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.36.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.36.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.36.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.36.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.36.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.36.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.36.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.37.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.37.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.37.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.37.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.37.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.37.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.37.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.37.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.38.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.38.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.38.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.38.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.38.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.38.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.38.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.38.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.39.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.39.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.39.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.39.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.39.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.39.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.39.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.4.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.4.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.4.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.4.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.4.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.4.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.4.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.4.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.40.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.40.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.40.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.40.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.40.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.40.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.40.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.40.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.41.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.41.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.41.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.41.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.41.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.41.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.41.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.41.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.42.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.42.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.42.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.42.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.42.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.42.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.42.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.42.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.43.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.43.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.43.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.43.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.43.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.43.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.43.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.44.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.44.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.44.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.44.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.44.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.44.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.44.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.44.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.45.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.45.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.45.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.45.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.45.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.45.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.45.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.45.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.46.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.46.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.46.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.46.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.46.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.46.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.46.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.46.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.47.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.47.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.47.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.47.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.47.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.47.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.47.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.48.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.48.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.48.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.48.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.48.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.48.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.48.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.48.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.49.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.49.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.49.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.49.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.49.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.49.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.49.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.49.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.5.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.5.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.5.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.5.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.5.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.5.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.5.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.5.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.50.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.50.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.50.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.50.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.50.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.50.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.50.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.50.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.51.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.51.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.51.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.51.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.51.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.51.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.51.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.52.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.52.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.52.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.52.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.52.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.52.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.52.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.52.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.53.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.53.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.53.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.53.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.53.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.53.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.53.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.53.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.54.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.54.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.54.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.54.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.54.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.54.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.54.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.54.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.55.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.55.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.55.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.55.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.55.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.55.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.55.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.56.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.56.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.56.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.56.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.56.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.56.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.56.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.56.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.57.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.57.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.57.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.57.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.57.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.57.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.57.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.57.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.58.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.58.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.58.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.58.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.58.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.58.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.58.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.58.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.59.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.59.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.59.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.59.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.59.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.59.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.59.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.6.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.6.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.6.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.6.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.6.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.6.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.6.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.6.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.60.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.60.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.60.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.60.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.60.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.60.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.60.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.60.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.61.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.61.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.61.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.61.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.61.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.61.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.61.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.61.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.62.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.62.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.62.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.62.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.62.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.62.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.62.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.62.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.63.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.63.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.63.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.63.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.63.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.63.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.63.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.7.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.7.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.7.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.7.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.7.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.7.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "full_attention",
+      "name": "model.language_model.layers.7.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.8.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.8.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.8.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.8.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.8.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.8.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.8.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.8.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.9.linear_attn.in_proj_a",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.9.linear_attn.in_proj_b",
+      "shape": [
+        48,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.9.linear_attn.in_proj_qkv",
+      "shape": [
+        10240,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.9.linear_attn.in_proj_z",
+      "shape": [
+        6144,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "recurrent_gdn",
+      "name": "model.language_model.layers.9.linear_attn.out_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.9.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.9.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "text_mlp",
+      "name": "model.language_model.layers.9.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.0.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.0.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.0.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.0.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.1.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.1.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.1.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.1.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.10.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.10.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.10.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.10.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.11.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.11.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.11.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.11.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.12.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.12.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.12.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.12.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.13.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.13.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.13.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.13.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.14.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.14.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.14.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.14.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.15.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.15.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.15.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.15.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.16.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.16.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.16.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.16.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.17.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.17.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.17.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.17.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.18.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.18.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.18.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.18.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.19.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.19.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.19.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.19.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.2.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.2.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.2.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.2.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.20.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.20.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.20.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.20.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.21.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.21.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.21.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.21.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.22.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.22.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.22.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.22.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.23.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.23.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.23.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.23.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.24.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.24.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.24.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.24.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.25.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.25.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.25.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.25.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.26.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.26.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.26.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.26.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.3.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.3.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.3.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.3.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.4.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.4.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.4.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.4.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.5.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.5.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.5.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.5.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.6.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.6.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.6.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.6.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.7.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.7.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.7.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.7.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.8.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.8.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.8.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.8.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.9.attn.proj",
+      "shape": [
+        1152,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.9.attn.qkv",
+      "shape": [
+        3456,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.9.mlp.linear_fc1",
+      "shape": [
+        4304,
+        1152
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.blocks.9.mlp.linear_fc2",
+      "shape": [
+        1152,
+        4304
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.merger.linear_fc1",
+      "shape": [
+        4608,
+        4608
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "vision",
+      "name": "model.visual.merger.linear_fc2",
+      "shape": [
+        5120,
+        4608
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.fc",
+      "shape": [
+        5120,
+        10240
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.layers.0.mlp.down_proj",
+      "shape": [
+        5120,
+        17408
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.layers.0.mlp.gate_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.layers.0.mlp.up_proj",
+      "shape": [
+        17408,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.layers.0.self_attn.k_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.layers.0.self_attn.o_proj",
+      "shape": [
+        5120,
+        6144
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.layers.0.self_attn.q_proj",
+      "shape": [
+        12288,
+        5120
+      ],
+      "type": "Linear"
+    },
+    {
+      "component": "mtp",
+      "name": "mtp.layers.0.self_attn.v_proj",
+      "shape": [
+        1024,
+        5120
+      ],
+      "type": "Linear"
+    }
+  ],
+  "model_path": "/home/emmy/workspace/qwen3.8-27b-download/model",
+  "model_type": "qwen3_5",
+  "notable_tensors": {
+    "embeddings": [
+      "model.language_model.embed_tokens.weight"
+    ],
+    "lm_head": [
+      "lm_head.weight"
+    ],
+    "mtp": [
+      "mtp.fc.weight",
+      "mtp.layers.0.input_layernorm.weight",
+      "mtp.layers.0.mlp.down_proj.weight",
+      "mtp.layers.0.mlp.gate_proj.weight",
+      "mtp.layers.0.mlp.up_proj.weight",
+      "mtp.layers.0.post_attention_layernorm.weight",
+      "mtp.layers.0.self_attn.k_norm.weight",
+      "mtp.layers.0.self_attn.k_proj.weight",
+      "mtp.layers.0.self_attn.o_proj.weight",
+      "mtp.layers.0.self_attn.q_norm.weight",
+      "mtp.layers.0.self_attn.q_proj.weight",
+      "mtp.layers.0.self_attn.v_proj.weight",
+      "mtp.norm.weight",
+      "mtp.pre_fc_norm_embedding.weight",
+      "mtp.pre_fc_norm_hidden.weight"
+    ]
+  },
+  "parameter_kind_counts": {
+    "Depthwise Conv1d": 48,
+    "Embedding": 1,
+    "Linear": 614,
+    "Linear (lm_head)": 1,
+    "Normalization": 290,
+    "Parameter": 243,
+    "Vision patch projection": 2
+  },
+  "tensor_components": {
+    "embeddings": {
+      "bytes": 2542796800,
+      "tensor_count": 1
+    },
+    "full_attention": {
+      "bytes": 3355459584,
+      "tensor_count": 96
+    },
+    "lm_head": {
+      "bytes": 2542796800,
+      "tensor_count": 1
+    },
+    "mtp": {
+      "bytes": 849398784,
+      "tensor_count": 15
+    },
+    "normalization": {
+      "bytes": 1320960,
+      "tensor_count": 129
+    },
+    "recurrent_gdn": {
+      "bytes": 11124102144,
+      "tensor_count": 432
+    },
+    "text_mlp": {
+      "bytes": 34225520640,
+      "tensor_count": 192
+    },
+    "vision": {
+      "bytes": 921460192,
+      "tensor_count": 333
+    }
+  },
+  "transformers_version_recorded": "5.8.0.dev0"
+}

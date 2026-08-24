@@ -1,0 +1,103 @@
+schema_version: 1
+
+model:
+  source: /models/source
+  output: /models/Qwen3.8-27B-W8A8-INT8
+  architecture: Qwen3_5ForConditionalGeneration
+  model_type: qwen3_5
+  dtype: bfloat16
+  local_files_only: true
+  trust_remote_code: false
+  expected:
+    shards: 18
+    tensors: 1199
+    text_layers: 64
+    vision_layers: 27
+    mtp_layers: 1
+
+# The initial production policy is deliberately conservative. LLM Compressor's
+# target syntax uses class names and `re:` regular expressions.
+policy:
+  target: Linear
+  ignore:
+    - lm_head
+    - "re:.*visual.*"
+    - "re:.*linear_attn.*"
+    - "re:^mtp\\..*"
+  preserve:
+    embeddings:
+      patterns: ["model.language_model.embed_tokens"]
+      reason: Large vocabulary embeddings are accuracy-sensitive and are not native W8A8 GEMM targets.
+    lm_head:
+      patterns: ["lm_head"]
+      reason: Preserve logits quality and avoid quantizing the untied 248320-token output projection.
+    normalization:
+      patterns: ["re:.*norm.*"]
+      reason: Norms are not Linear; Qwen3.8 RMSNorm weights are zero-centered and applied as 1+weight.
+    vision:
+      patterns: ["re:.*visual.*"]
+      reason: The 27-layer vision tower is excluded for the first text-inference checkpoint because it is sensitive and loaded differently by sequential compression.
+    mtp:
+      patterns: ["re:^mtp\\..*"]
+      reason: Transformers does not instantiate the checkpoint's top-level MTP tensors; they must be copied back byte-for-byte after model serialization.
+    recurrent_gdn:
+      patterns: ["re:.*linear_attn.*"]
+      reason: Preserve Gated DeltaNet projections, convolution, recurrent parameters, and gated norm until mixed-path accuracy is measured.
+
+quantization:
+  modifier: GPTQModifier
+  scheme: W8A8
+  weights: int8_per_channel
+  input_activations: int8_dynamic_per_token
+  block_size: 128
+  dampening_frac: 0.01
+  pipeline: sequential
+  # Text decoder blocks are the onloading subgraphs. Treating each Linear as a
+  # subgraph trips the sequential AST tracer on the multimodal wrapper.
+  sequential_targets: [Qwen3_5DecoderLayer]
+  smoothquant:
+    enabled: false
+    reason: Generic mappings assume conventional norm scaling and are not validated for Qwen3.8 zero-centered RMSNorm/GDN.
+  serialization: compressed-tensors
+
+calibration:
+  seed: 42
+  cache_dir: /work/cache/huggingface/datasets
+  local_smoke_file: /app/quant/recipes/smoke_prompts.jsonl
+  dataset: HuggingFaceH4/ultrachat_200k
+  split: train_sft
+  profiles:
+    smoke:
+      synthetic_model: true
+      num_samples: 4
+      max_seq_length: 64
+      target: "re:.*language_model.layers.3.(self_attn|mlp).*"
+    tiny_source:
+      synthetic_model: false
+      local_prompts: true
+      num_samples: 2
+      max_seq_length: 128
+    small:
+      synthetic_model: false
+      local_prompts: false
+      num_samples: 32
+      max_seq_length: 512
+    quality:
+      synthetic_model: false
+      local_prompts: false
+      num_samples: 512
+      max_seq_length: 2048
+
+memory:
+  loading: auto_offload
+  max_cpu_gib: 80
+  offload_dir: /work/scratch/offload
+  # Sequential onloading uses one GPU at a time. Both devices remain visible so
+  # a later measured DDP experiment does not require changing the container.
+  compression_device: cuda:0
+
+safety:
+  refuse_existing_output: true
+  require_complete_source_index: true
+  require_mtp_reinjection: true
+  full_run_requires_flag: true

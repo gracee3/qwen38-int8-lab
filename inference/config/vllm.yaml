@@ -1,0 +1,16 @@
+schema_version: 1
+model: /models/Qwen3.8-27B-W8A8-INT8
+served_model_name: qwen38-w8a8
+tensor_parallel_size: 2
+max_model_len: 4096
+gpu_memory_utilization: 0.90
+seed: 42
+initial_features:
+  mtp: false
+  fp8_kv_cache: false
+  prefix_caching: false
+  chunked_prefill: false
+required_log_evidence:
+  quant_scheme: CompressedTensorsW8A8Int8
+  linear_kernel: CutlassInt8ScaledMMLinearKernel
+  exact_pattern: Selected CutlassInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8
