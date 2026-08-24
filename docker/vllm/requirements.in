@@ -1,0 +1,5 @@
+# Precompiled vLLM release and its explicit checkpoint/runtime contract. The
+# PyTorch base is immutable and already provides torch 2.13.0 plus CUDA 13.0.
+vllm==0.27.1
+torch==2.13.0
+compressed-tensors==0.17.0

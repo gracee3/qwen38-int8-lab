@@ -1,0 +1,21 @@
+# PyTorch is supplied by the digest-pinned base image. Keeping it here makes
+# the compatibility contract explicit and prevents an accidental replacement.
+torch==2.13.0
+
+# Quantization orchestration and calibrated GPTQ W8A8 recipe.
+llmcompressor==0.13.0
+
+# Directly used for offload/loading contexts and Safetensors serialization.
+compressed-tensors==0.18.0
+
+# Qwen3.5/Qwen3.8 architecture implementation. 5.14.1 is the newest release
+# accepted by llmcompressor 0.13.0 (which caps Transformers at <=5.14.1).
+transformers==5.14.1
+
+# Explicit runtime APIs used by our loader, dataset pipeline, and serializers.
+accelerate==1.14.0
+datasets==5.0.1
+safetensors==0.8.0
+huggingface-hub==1.28.0
+numpy==2.4.6
+PyYAML==6.0.3

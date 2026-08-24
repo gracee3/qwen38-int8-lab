@@ -63,6 +63,7 @@ just info
 just build-quant
 just gpu
 just inspect-model
+just quant-plan
 just quant-smoke
 
 just build-vllm
@@ -89,5 +90,9 @@ As of 2026-08-24:
 - The local source is complete: 18 Safetensors shards, 1,199 tensors, about 51.75 GiB of shard files.
 - Metadata identifies `Qwen3_5ForConditionalGeneration`: 64 text layers (48 recurrent/linear-attention and 16 full-attention), a 27-layer vision tower, and one MTP layer.
 - The host has two visible RTX 3090 GPUs and an NVIDIA-capable Docker runtime.
-- Container builds, runtime imports, synthetic W8A8 serialization, vLLM load, and native CUTLASS dispatch remain to be validated in this repository.
+- Both pinned Docker images build and see both SM86 GPUs. The exact resolved environments are checked in.
+- The sequential synthetic gate passes calibration, GPTQ W8A8 compression, Safetensors serialization, index inspection, and quantization-metadata validation. It recorded about 2.0 GiB peak process RSS and 364/266 MiB peak GPU memory.
+- vLLM 0.27.1 registers the Qwen architecture and, on this host, selects `CutlassInt8ScaledMMLinearKernel` for the intended `CompressedTensorsW8A8Int8` scheme. Loading and dispatching the eventual 27B checkpoint remain untested and are not claimed.
 - No full 27B quantization has been started.
+
+See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.

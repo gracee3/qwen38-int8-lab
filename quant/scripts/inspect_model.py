@@ -170,17 +170,24 @@ def inspect_checkpoint(model_path: Path, instantiate_meta: bool) -> tuple[dict[s
     model_path = model_path.expanduser().resolve()
     config_path = model_path / "config.json"
     index_path = model_path / "model.safetensors.index.json"
+    single_shard_path = model_path / "model.safetensors"
     errors: list[str] = []
     if not config_path.is_file():
         errors.append("config.json is missing")
-    if not index_path.is_file():
-        errors.append("model.safetensors.index.json is missing")
+    if not index_path.is_file() and not single_shard_path.is_file():
+        errors.append("neither model.safetensors.index.json nor model.safetensors is present")
     if errors:
         return {"model_path": str(model_path), "errors": errors}, False
 
     config = read_json(config_path)
-    index = read_json(index_path)
-    weight_map: dict[str, str] = index.get("weight_map", {})
+    index_present = index_path.is_file()
+    if index_present:
+        index = read_json(index_path)
+        weight_map: dict[str, str] = index.get("weight_map", {})
+    else:
+        single_header, _ = safetensors_header(single_shard_path)
+        weight_map = {name: single_shard_path.name for name in single_header if name != "__metadata__"}
+        index = {"metadata": {}, "weight_map": weight_map}
     shards = sorted(set(weight_map.values()))
     top_level_shards = sorted(path.name for path in model_path.glob("*.safetensors"))
     missing_shards = [name for name in shards if not (model_path / name).is_file()]
@@ -245,7 +252,7 @@ def inspect_checkpoint(model_path: Path, instantiate_meta: bool) -> tuple[dict[s
         )
 
     missing_index_tensors = sorted(set(weight_map) - set(actual_map))
-    unindexed_tensors = sorted(set(actual_map) - set(weight_map))
+    unindexed_tensors = sorted(set(actual_map) - set(weight_map)) if index_present else []
     mapping_mismatches = sorted(name for name in set(weight_map) & set(actual_map) if weight_map[name] != actual_map[name])
     if missing_index_tensors:
         errors.append(f"{len(missing_index_tensors)} indexed tensor(s) absent from shard headers")
@@ -267,7 +274,7 @@ def inspect_checkpoint(model_path: Path, instantiate_meta: bool) -> tuple[dict[s
         "configured_dtype": text.get("dtype", config.get("dtype")),
         "transformers_version_recorded": config.get("transformers_version"),
         "checkpoint": {
-            "index_present": True,
+            "index_present": index_present,
             "declared_weight_bytes": int(index.get("metadata", {}).get("total_size", 0)),
             "shard_bytes": sum(item["size_bytes"] for item in shard_reports),
             "directory_bytes": sum(path.stat().st_size for path in model_path.rglob("*") if path.is_file()),
@@ -382,4 +389,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

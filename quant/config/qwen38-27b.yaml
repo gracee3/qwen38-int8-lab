@@ -51,9 +51,10 @@ quantization:
   input_activations: int8_dynamic_per_token
   block_size: 128
   dampening_frac: 0.01
-  sequential_update: true
   pipeline: sequential
-  sequential_targets: Linear
+  # Text decoder blocks are the onloading subgraphs. Treating each Linear as a
+  # subgraph trips the sequential AST tracer on the multimodal wrapper.
+  sequential_targets: [Qwen3_5DecoderLayer]
   smoothquant:
     enabled: false
     reason: Generic mappings assume conventional norm scaling and are not validated for Qwen3.8 zero-centered RMSNorm/GDN.
@@ -100,4 +101,3 @@ safety:
   require_complete_source_index: true
   require_mtp_reinjection: true
   full_run_requires_flag: true
-
