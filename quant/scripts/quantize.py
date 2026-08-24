@@ -437,7 +437,7 @@ def run_load_trace_only(config: dict[str, Any], profile: dict[str, Any]) -> dict
     import torch
     from llmcompressor.args import DatasetArguments
     from llmcompressor.pipelines.sequential.helpers import trace_subgraphs
-    from transformers import Qwen3_5DecoderLayer
+    from transformers.models.qwen3_5.modeling_qwen3_5 import Qwen3_5DecoderLayer
 
     scratch = Path("/work/scratch")
     output_names_before = {
