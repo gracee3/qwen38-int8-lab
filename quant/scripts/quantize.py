@@ -126,14 +126,23 @@ class PeakMonitor:
         self.interval = interval
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
-        self.peak_rss_bytes = 0
+        initial_rss, initial_vmswap = self._process_memory_status()
+        self.peak_rss_bytes = initial_rss
+        self.initial_process_vmswap_bytes = initial_vmswap
+        self.peak_process_vmswap_bytes = initial_vmswap
         self.peak_gpu_mib: dict[str, int] = {}
         self.min_mem_available_bytes: int | None = None
         self.initial_swap_used_bytes = self._memory_status()[1]
         self.max_swap_used_bytes = self.initial_swap_used_bytes
         self.min_disk_available_bytes: int | None = None
+        self.page_size_bytes = os.sysconf("SC_PAGE_SIZE")
+        self.initial_swap_io_pages = self._read_swap_io_pages()
+        self.latest_swap_io_pages = dict(self.initial_swap_io_pages)
+        self.initial_memory_psi_total_usec = self._read_memory_psi_total_usec()
+        self.latest_memory_psi_total_usec = dict(self.initial_memory_psi_total_usec)
         self.abort_limits = abort_limits
         self.safety_trigger: str | None = None
+        self.safety_trigger_reason: str | None = None
         self._unsafe_since: float | None = None
         self.samples = 0
 
@@ -145,11 +154,35 @@ class PeakMonitor:
         self.stop_event.set()
         self.thread.join(timeout=5)
 
-    def _read_rss(self) -> int:
+    def _process_memory_status(self) -> tuple[int, int]:
+        values: dict[str, int] = {}
         for line in Path("/proc/self/status").read_text(encoding="utf-8").splitlines():
-            if line.startswith("VmRSS:"):
-                return int(line.split()[1]) * 1024
-        return 0
+            key, separator, value = line.partition(":")
+            if separator and key in {"VmRSS", "VmSwap"}:
+                values[key] = int(value.split()[0]) * 1024
+        return values.get("VmRSS", 0), values.get("VmSwap", 0)
+
+    def _read_swap_io_pages(self) -> dict[str, int]:
+        values: dict[str, int] = {}
+        for line in Path("/proc/vmstat").read_text(encoding="utf-8").splitlines():
+            key, value = line.split()
+            if key in {"pswpin", "pswpout"}:
+                values[key] = int(value)
+        if set(values) != {"pswpin", "pswpout"}:
+            raise RuntimeError(f"Missing swap-I/O counters in /proc/vmstat: {values}")
+        return values
+
+    def _read_memory_psi_total_usec(self) -> dict[str, int]:
+        values: dict[str, int] = {}
+        for line in Path("/proc/pressure/memory").read_text(encoding="utf-8").splitlines():
+            fields = line.split()
+            category = fields[0]
+            totals = [field for field in fields[1:] if field.startswith("total=")]
+            if len(totals) == 1:
+                values[category] = int(totals[0].split("=", 1)[1])
+        if set(values) != {"some", "full"}:
+            raise RuntimeError(f"Missing memory PSI totals in /proc/pressure/memory: {values}")
+        return values
 
     def _read_gpus(self) -> dict[str, int]:
         try:
@@ -180,24 +213,31 @@ class PeakMonitor:
 
     def _run(self) -> None:
         while not self.stop_event.is_set():
-            self.peak_rss_bytes = max(self.peak_rss_bytes, self._read_rss())
+            rss, process_vmswap = self._process_memory_status()
+            self.peak_rss_bytes = max(self.peak_rss_bytes, rss)
+            self.peak_process_vmswap_bytes = max(self.peak_process_vmswap_bytes, process_vmswap)
             mem_available, swap_used = self._memory_status()
             self.min_mem_available_bytes = min(self.min_mem_available_bytes or mem_available, mem_available)
             self.max_swap_used_bytes = max(self.max_swap_used_bytes, swap_used)
             disk_available = shutil.disk_usage("/work/scratch").free
             self.min_disk_available_bytes = min(self.min_disk_available_bytes or disk_available, disk_available)
+            self.latest_swap_io_pages = self._read_swap_io_pages()
+            self.latest_memory_psi_total_usec = self._read_memory_psi_total_usec()
             for index, used in self._read_gpus().items():
                 self.peak_gpu_mib[index] = max(self.peak_gpu_mib.get(index, 0), used)
             if self.abort_limits:
-                unsafe = (
-                    mem_available < self.abort_limits["min_mem_available_bytes"]
-                    or swap_used - self.initial_swap_used_bytes > self.abort_limits["max_swap_growth_bytes"]
-                )
-                if unsafe:
+                reasons = []
+                if mem_available < self.abort_limits["min_mem_available_bytes"]:
+                    reasons.append("host_mem_available_below_floor")
+                if swap_used - self.initial_swap_used_bytes > self.abort_limits["max_swap_growth_bytes"]:
+                    reasons.append("host_swap_growth_above_limit")
+                if reasons:
                     self._unsafe_since = self._unsafe_since or time.monotonic()
                     if time.monotonic() - self._unsafe_since >= self.abort_limits["sustain_seconds"]:
+                        self.safety_trigger_reason = "+".join(reasons)
                         self.safety_trigger = (
-                            f"unsafe host memory persisted: MemAvailable={mem_available}, "
+                            f"unsafe host memory persisted ({self.safety_trigger_reason}): "
+                            f"MemAvailable={mem_available}, "
                             f"swap_growth={swap_used - self.initial_swap_used_bytes}"
                         )
                         os.kill(os.getpid(), signal.SIGINT)
@@ -208,15 +248,45 @@ class PeakMonitor:
             self.stop_event.wait(self.interval)
 
     def report(self) -> dict[str, Any]:
+        current_rss, current_process_vmswap = self._process_memory_status()
+        self.peak_rss_bytes = max(self.peak_rss_bytes, current_rss)
+        self.peak_process_vmswap_bytes = max(self.peak_process_vmswap_bytes, current_process_vmswap)
+        self.latest_swap_io_pages = self._read_swap_io_pages()
+        self.latest_memory_psi_total_usec = self._read_memory_psi_total_usec()
+        swap_io_delta_pages = {
+            key: self.latest_swap_io_pages[key] - self.initial_swap_io_pages[key]
+            for key in self.initial_swap_io_pages
+        }
+        memory_psi_delta_usec = {
+            key: self.latest_memory_psi_total_usec[key] - self.initial_memory_psi_total_usec[key]
+            for key in self.initial_memory_psi_total_usec
+        }
         return {
             "peak_process_rss_bytes": self.peak_rss_bytes,
+            "initial_process_vmswap_bytes": self.initial_process_vmswap_bytes,
+            "peak_process_vmswap_bytes": self.peak_process_vmswap_bytes,
             "peak_gpu_memory_mib": self.peak_gpu_mib,
             "minimum_host_mem_available_bytes": self.min_mem_available_bytes,
             "initial_swap_used_bytes": self.initial_swap_used_bytes,
             "maximum_swap_used_bytes": self.max_swap_used_bytes,
             "swap_growth_bytes": self.max_swap_used_bytes - self.initial_swap_used_bytes,
+            "host_swap_io": {
+                "page_size_bytes": self.page_size_bytes,
+                "initial_pages": self.initial_swap_io_pages,
+                "final_pages": self.latest_swap_io_pages,
+                "delta_pages": swap_io_delta_pages,
+                "delta_bytes": {
+                    key: pages * self.page_size_bytes for key, pages in swap_io_delta_pages.items()
+                },
+            },
+            "memory_psi": {
+                "initial_total_usec": self.initial_memory_psi_total_usec,
+                "final_total_usec": self.latest_memory_psi_total_usec,
+                "delta_total_usec": memory_psi_delta_usec,
+            },
             "minimum_disk_available_bytes": self.min_disk_available_bytes,
             "safety_trigger": self.safety_trigger,
+            "safety_trigger_reason": self.safety_trigger_reason,
             "samples": self.samples,
             "sample_interval_seconds": self.interval,
         }
@@ -554,7 +624,13 @@ def run_full_model(
         sequential_targets=config["quantization"]["sequential_targets"],
     )
     staging.mkdir(parents=True, exist_ok=False)
-    model.save_pretrained(staging, safe_serialization=True, save_compressed=True, max_shard_size="4GB")
+    max_shard_size = config["quantization"]["serialization_max_shard_size"]
+    model.save_pretrained(
+        staging,
+        safe_serialization=True,
+        save_compressed=True,
+        max_shard_size=max_shard_size,
+    )
     tokenizer.save_pretrained(staging)
     mtp = inject_mtp_tensors(source, staging)
     if profile_name != "quality":
@@ -580,6 +656,7 @@ def run_full_model(
         "profile": profile_name,
         "calibration_samples": profile["num_samples"],
         "max_seq_length": profile["max_seq_length"],
+        "serialization_max_shard_size": max_shard_size,
         "mtp_reinjection": mtp,
         "shared_load": shared,
     }
@@ -629,6 +706,9 @@ def main() -> int:
         "profile": args.profile,
         "packages": package_versions(),
         "gpu": gpu,
+        "configured_real_serialization_max_shard_size": config["quantization"][
+            "serialization_max_shard_size"
+        ],
         "source": {
             "path": str(source),
             "architecture": source_report["architecture"],
