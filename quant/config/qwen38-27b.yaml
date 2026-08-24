@@ -59,6 +59,9 @@ quantization:
     enabled: false
     reason: Generic mappings assume conventional norm scaling and are not validated for Qwen3.8 zero-centered RMSNorm/GDN.
   serialization: compressed-tensors
+  # Smaller real-checkpoint shards reduce peak serialization pressure and are
+  # configurable independently of the tiny synthetic smoke artifact.
+  serialization_max_shard_size: 1GB
 
 calibration:
   seed: 42
