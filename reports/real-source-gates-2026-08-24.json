@@ -1,0 +1,35 @@
+{
+  "date": "2026-08-24",
+  "implementation_commit": "0c507d6546a93500efc39ce7e14b72e2ea230498",
+  "load_trace": {
+    "status": "passed",
+    "metadata": "/data/qwen38-int8-lab/results/quant-tiny_source-20260824T211026Z.json",
+    "decoder_targets": 64,
+    "sequential_subgraphs": 65,
+    "token_lengths": [70, 59],
+    "compressed_tensors_device_map_counts": {"cpu->cpu": 1345},
+    "peak_process_rss_bytes": 2083762176,
+    "minimum_host_mem_available_bytes": 94666362880,
+    "swap_growth_bytes": 0,
+    "peak_gpu_memory_mib": {"0": 4, "1": 4},
+    "minimum_disk_available_bytes": 541750886400
+  },
+  "quant_tiny": {
+    "status": "safety_stopped_during_serialization",
+    "metadata": "/data/qwen38-int8-lab/results/quant-tiny_source-20260824T211058Z.json",
+    "tmux_session": "qwen38-quant-tiny-20260824T211053Z",
+    "initial_pane_pid": 481734,
+    "log": "/data/qwen38-int8-lab/logs/quant-tiny-20260824T211053Z.log",
+    "incomplete_staging": "/data/qwen38-int8-lab/scratch/.Qwen3.8-27B-W8A8-tiny-source-20260824T211053Z.incomplete-20260824T211059Z",
+    "incomplete_file_bytes": 14367972286,
+    "peak_process_rss_bytes": 70051475456,
+    "minimum_host_mem_available_bytes": 36695920640,
+    "swap_growth_bytes": 7169265664,
+    "peak_gpu_memory_mib": {"0": 13736, "1": 266},
+    "minimum_disk_available_bytes": 528772657152,
+    "safety_trigger": "unsafe host memory persisted: MemAvailable=43927826432, swap_growth=7169265664"
+  },
+  "structural_validation": "not_run_incomplete_checkpoint",
+  "vllm_tp2": "not_run_incomplete_checkpoint",
+  "quality_run_authorization_recommendation": false
+}
