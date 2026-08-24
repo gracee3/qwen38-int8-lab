@@ -65,6 +65,8 @@ just gpu
 just inspect-model
 just quant-plan
 just quant-smoke
+just load-trace   # complete BF16 load + two-prompt sequential trace; no GPTQ/output
+just quant-tiny   # two-sample real-source experimental artifact under /work/scratch
 
 just build-vllm
 just validate
@@ -76,6 +78,8 @@ just bench
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`.
 
 `just quant-smoke` is designed to quantize a tiny synthetic Qwen3.5/3.8-shaped model with the real package APIs and serialization path. It is not a partially quantized 27B checkpoint. Experimental real-source profiles require an explicit destination below `/work/scratch` and are marked non-production. The guarded `just quant` command is reserved for the measured quality run and refuses to overwrite an existing output.
+
+`just load-trace` is the production-faithful, non-executing real-source safety gate. It loads the complete BF16 checkpoint with the same loader, tokenizer, local two-prompt dataset, 80 GiB CPU ceiling, and `auto_offload` mapping used by `just quant-tiny`, then invokes LLM Compressor's sequential tracer without GPTQ or serialization. `just quant-tiny` always creates a timestamped, explicitly non-production checkpoint below `/work/scratch`; neither command writes to the production model destination.
 
 ## Reproducibility
 
