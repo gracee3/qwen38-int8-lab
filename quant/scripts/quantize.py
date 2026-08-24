@@ -11,6 +11,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import threading
@@ -121,12 +122,19 @@ def resolve_policy(model_path: Path, policy: dict[str, Any]) -> dict[str, Any]:
 
 
 class PeakMonitor:
-    def __init__(self, interval: float = 0.5) -> None:
+    def __init__(self, interval: float = 0.5, abort_limits: dict[str, int] | None = None) -> None:
         self.interval = interval
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.peak_rss_bytes = 0
         self.peak_gpu_mib: dict[str, int] = {}
+        self.min_mem_available_bytes: int | None = None
+        self.initial_swap_used_bytes = self._memory_status()[1]
+        self.max_swap_used_bytes = self.initial_swap_used_bytes
+        self.min_disk_available_bytes: int | None = None
+        self.abort_limits = abort_limits
+        self.safety_trigger: str | None = None
+        self._unsafe_since: float | None = None
         self.samples = 0
 
     def __enter__(self) -> "PeakMonitor":
@@ -163,11 +171,39 @@ class PeakMonitor:
             values[index] = int(used)
         return values
 
+    def _memory_status(self) -> tuple[int, int]:
+        values: dict[str, int] = {}
+        for line in Path("/proc/meminfo").read_text(encoding="utf-8").splitlines():
+            key, value = line.split(":", 1)
+            values[key] = int(value.split()[0]) * 1024
+        return values["MemAvailable"], values["SwapTotal"] - values["SwapFree"]
+
     def _run(self) -> None:
         while not self.stop_event.is_set():
             self.peak_rss_bytes = max(self.peak_rss_bytes, self._read_rss())
+            mem_available, swap_used = self._memory_status()
+            self.min_mem_available_bytes = min(self.min_mem_available_bytes or mem_available, mem_available)
+            self.max_swap_used_bytes = max(self.max_swap_used_bytes, swap_used)
+            disk_available = shutil.disk_usage("/work/scratch").free
+            self.min_disk_available_bytes = min(self.min_disk_available_bytes or disk_available, disk_available)
             for index, used in self._read_gpus().items():
                 self.peak_gpu_mib[index] = max(self.peak_gpu_mib.get(index, 0), used)
+            if self.abort_limits:
+                unsafe = (
+                    mem_available < self.abort_limits["min_mem_available_bytes"]
+                    or swap_used - self.initial_swap_used_bytes > self.abort_limits["max_swap_growth_bytes"]
+                )
+                if unsafe:
+                    self._unsafe_since = self._unsafe_since or time.monotonic()
+                    if time.monotonic() - self._unsafe_since >= self.abort_limits["sustain_seconds"]:
+                        self.safety_trigger = (
+                            f"unsafe host memory persisted: MemAvailable={mem_available}, "
+                            f"swap_growth={swap_used - self.initial_swap_used_bytes}"
+                        )
+                        os.kill(os.getpid(), signal.SIGINT)
+                        return
+                else:
+                    self._unsafe_since = None
             self.samples += 1
             self.stop_event.wait(self.interval)
 
@@ -175,6 +211,12 @@ class PeakMonitor:
         return {
             "peak_process_rss_bytes": self.peak_rss_bytes,
             "peak_gpu_memory_mib": self.peak_gpu_mib,
+            "minimum_host_mem_available_bytes": self.min_mem_available_bytes,
+            "initial_swap_used_bytes": self.initial_swap_used_bytes,
+            "maximum_swap_used_bytes": self.max_swap_used_bytes,
+            "swap_growth_bytes": self.max_swap_used_bytes - self.initial_swap_used_bytes,
+            "minimum_disk_available_bytes": self.min_disk_available_bytes,
+            "safety_trigger": self.safety_trigger,
             "samples": self.samples,
             "sample_interval_seconds": self.interval,
         }
@@ -353,6 +395,97 @@ def load_calibration_dataset(config: dict[str, Any], profile: dict[str, Any], to
     return dataset.map(tokenize, remove_columns=dataset.column_names)
 
 
+def load_real_inputs(config: dict[str, Any], profile: dict[str, Any]):
+    """Load the real checkpoint, tokenizer, and local calibration data identically."""
+    import transformers
+    from llmcompressor.utils import load_context
+    from transformers import AutoConfig, AutoTokenizer
+
+    source = Path(config["model"]["source"])
+    offload_dir = Path(config["memory"]["offload_dir"])
+    offload_dir.mkdir(parents=True, exist_ok=True)
+    hf_config = AutoConfig.from_pretrained(source, local_files_only=True, trust_remote_code=False)
+    model_class = getattr(transformers, hf_config.architectures[0])
+    started = time.monotonic()
+    with load_context(model_class):
+        model = model_class.from_pretrained(
+            source,
+            dtype="auto",
+            local_files_only=True,
+            trust_remote_code=False,
+            device_map="auto_offload",
+            max_memory={"cpu": f"{config['memory']['max_cpu_gib']}GiB"},
+            offload_folder=offload_dir,
+        )
+    load_seconds = time.monotonic() - started
+    tokenizer = AutoTokenizer.from_pretrained(source, local_files_only=True, trust_remote_code=False)
+    dataset_started = time.monotonic()
+    dataset = load_calibration_dataset(config, profile, tokenizer)
+    dataset_seconds = time.monotonic() - dataset_started
+    return model, tokenizer, dataset, {
+        "load_seconds": load_seconds,
+        "dataset_seconds": dataset_seconds,
+        "device_map_counts": {
+            str(device): list(getattr(model, "hf_device_map", {}).values()).count(device)
+            for device in sorted(set(getattr(model, "hf_device_map", {}).values()), key=str)
+        },
+    }
+
+
+def run_load_trace_only(config: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
+    import gc
+    import torch
+    from llmcompressor.args import DatasetArguments
+    from llmcompressor.pipelines.sequential.helpers import trace_subgraphs
+    from transformers import Qwen3_5DecoderLayer
+
+    scratch = Path("/work/scratch")
+    output_names_before = {
+        path.name for path in scratch.iterdir() if "Qwen3.8-27B-W8A8" in path.name
+    }
+    model, tokenizer, dataset, timings = load_real_inputs(config, profile)
+    lengths = [len(dataset[index]["input_ids"]) for index in range(len(dataset))]
+    if lengths != [70, 59]:
+        raise RuntimeError(f"Local prompt token lengths changed: expected [70, 59], got {lengths}")
+    features = [dataset[index] for index in range(len(dataset))]
+    sample_input = tokenizer.pad(features, padding=True, max_length=profile["max_seq_length"], return_tensors="pt")
+    target_count = sum(isinstance(module, Qwen3_5DecoderLayer) for module in model.modules())
+    trace_started = time.monotonic()
+    subgraphs = trace_subgraphs(
+        model,
+        sample_input,
+        config["quantization"]["sequential_targets"],
+        DatasetArguments().tracing_ignore,
+    )
+    timings["trace_seconds"] = time.monotonic() - trace_started
+    if target_count != 64 or len(subgraphs) != 65:
+        raise RuntimeError(f"Trace invariant failed: targets={target_count}, subgraphs={len(subgraphs)}")
+    if "disk" in timings["device_map_counts"]:
+        raise RuntimeError(f"Disk-offloaded modules are forbidden: {timings['device_map_counts']}")
+    cleanup_started = time.monotonic()
+    del subgraphs, sample_input, dataset, tokenizer, model
+    gc.collect()
+    torch.cuda.empty_cache()
+    timings["cleanup_seconds"] = time.monotonic() - cleanup_started
+    output_names_after = {
+        path.name for path in scratch.iterdir() if "Qwen3.8-27B-W8A8" in path.name
+    }
+    if output_names_after != output_names_before:
+        raise RuntimeError(
+            f"Trace-only mode created a model output: {sorted(output_names_after - output_names_before)}"
+        )
+    return {
+        "artifact_kind": "qwen38_27b_bf16_load_trace_only",
+        "complete_production_model": False,
+        "output_directory_created": False,
+        "token_lengths": lengths,
+        "padded_batch_shape": [len(features), max(lengths)],
+        "decoder_target_count": target_count,
+        "sequential_subgraph_count": 65,
+        **timings,
+    }
+
+
 def inject_mtp_tensors(source_dir: Path, output_dir: Path) -> dict[str, Any]:
     """Restore top-level MTP tensors omitted by the Transformers model class."""
     import torch
@@ -396,10 +529,7 @@ def inject_mtp_tensors(source_dir: Path, output_dir: Path) -> dict[str, Any]:
 def run_full_model(
     config: dict[str, Any], profile_name: str, profile: dict[str, Any], output_dir: Path
 ) -> dict[str, Any]:
-    import transformers
     from llmcompressor import oneshot
-    from llmcompressor.utils import load_context
-    from transformers import AutoConfig, AutoTokenizer
 
     source = Path(config["model"]["source"])
     if output_dir.exists():
@@ -407,24 +537,7 @@ def run_full_model(
     staging = output_dir.with_name(f".{output_dir.name}.incomplete-{utc_stamp()}")
     if staging.exists():
         raise FileExistsError(staging)
-    offload_dir = Path(config["memory"]["offload_dir"])
-    offload_dir.mkdir(parents=True, exist_ok=True)
-
-    hf_config = AutoConfig.from_pretrained(source, local_files_only=True, trust_remote_code=False)
-    architecture = hf_config.architectures[0]
-    model_class = getattr(transformers, architecture)
-    with load_context(model_class):
-        model = model_class.from_pretrained(
-            source,
-            dtype="auto",
-            local_files_only=True,
-            trust_remote_code=False,
-            device_map="auto_offload",
-            max_memory={"cpu": f"{config['memory']['max_cpu_gib']}GiB"},
-            offload_folder=offload_dir,
-        )
-    tokenizer = AutoTokenizer.from_pretrained(source, local_files_only=True, trust_remote_code=False)
-    dataset = load_calibration_dataset(config, profile, tokenizer)
+    model, tokenizer, dataset, shared = load_real_inputs(config, profile)
     modifier = make_modifier(config["quantization"], config["policy"])
     started = time.monotonic()
     oneshot(
@@ -441,6 +554,16 @@ def run_full_model(
     model.save_pretrained(staging, safe_serialization=True, save_compressed=True, max_shard_size="4GB")
     tokenizer.save_pretrained(staging)
     mtp = inject_mtp_tensors(source, staging)
+    if profile_name != "quality":
+        write_metadata(
+            staging / "EXPERIMENTAL_NON_PRODUCTION.json",
+            {
+                "artifact_kind": "qwen38_27b_w8a8_experimental",
+                "production_authorized": False,
+                "profile": profile_name,
+                "git_commit": git_revision(),
+            },
+        )
     staging.rename(output_dir)
     return {
         "elapsed_seconds": time.monotonic() - started,
@@ -455,6 +578,7 @@ def run_full_model(
         "calibration_samples": profile["num_samples"],
         "max_seq_length": profile["max_seq_length"],
         "mtp_reinjection": mtp,
+        "shared_load": shared,
     }
 
 
@@ -470,7 +594,13 @@ def main() -> int:
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--execute-full", action="store_true", help="Required safety acknowledgement for non-synthetic work")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--load-trace-only", action="store_true")
     args = parser.parse_args()
+
+    if args.load_trace_only and (args.execute_full or args.output is not None):
+        parser.error("--load-trace-only is mutually exclusive with --execute-full and --output")
+    if args.load_trace_only and args.profile != "tiny_source":
+        parser.error("--load-trace-only is restricted to --profile tiny_source")
 
     config = read_yaml(args.config)
     source = Path(config["model"]["source"])
@@ -517,9 +647,9 @@ def main() -> int:
 
     profile = config["calibration"]["profiles"][args.profile]
     synthetic = bool(profile.get("synthetic_model"))
-    if not synthetic and not args.execute_full:
+    if not synthetic and not args.execute_full and not args.load_trace_only:
         raise SystemExit("Refusing real-checkpoint quantization without --execute-full")
-    if not synthetic and args.profile != "quality":
+    if not synthetic and args.profile != "quality" and not args.load_trace_only:
         if args.output is None:
             raise SystemExit("Experimental real-source profiles require an explicit --output under /work/scratch")
         if not args.output.is_absolute() or Path("/work/scratch") not in args.output.parents:
@@ -535,13 +665,37 @@ def main() -> int:
         )
     metadata_path = Path("/work/results") / f"quant-{args.profile}-{stamp}.json"
     status = "failed"
-    with PeakMonitor() as monitor:
+    abort_limits = None if synthetic or args.load_trace_only else {
+        "min_mem_available_bytes": 8 * 1024**3,
+        "max_swap_growth_bytes": 4 * 1024**3,
+        "sustain_seconds": 10,
+    }
+    with PeakMonitor(abort_limits=abort_limits) as monitor:
         try:
-            if synthetic:
+            if args.load_trace_only:
+                run = run_load_trace_only(config, profile)
+                trace_peaks = monitor.report()
+                trace_errors = []
+                if trace_peaks["peak_process_rss_bytes"] > 72 * 1024**3:
+                    trace_errors.append("peak process RSS exceeded 72 GiB")
+                if (trace_peaks["minimum_host_mem_available_bytes"] or 0) < 20 * 1024**3:
+                    trace_errors.append("host MemAvailable fell below 20 GiB")
+                if trace_peaks["swap_growth_bytes"] > 512 * 1024**2:
+                    trace_errors.append("swap growth exceeded 512 MiB")
+                if any(used >= 2048 for used in trace_peaks["peak_gpu_memory_mib"].values()):
+                    trace_errors.append("a GPU reached or exceeded 2 GiB")
+                if (trace_peaks["minimum_disk_available_bytes"] or 0) < 100 * 1024**3:
+                    trace_errors.append("disk availability fell below 100 GiB")
+                if trace_errors:
+                    raise RuntimeError("Load/trace safety gate failed: " + "; ".join(trace_errors))
+            elif synthetic:
                 run = run_synthetic_smoke(config, profile, output)
             else:
                 run = run_full_model(config, args.profile, profile, output)
             status = "passed"
+        except BaseException as exc:
+            base_metadata["error"] = f"{type(exc).__name__}: {exc}"
+            raise
         finally:
             base_metadata["finished_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
             base_metadata["status"] = status
