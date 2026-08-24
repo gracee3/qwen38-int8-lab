@@ -398,6 +398,7 @@ def load_calibration_dataset(config: dict[str, Any], profile: dict[str, Any], to
 def load_real_inputs(config: dict[str, Any], profile: dict[str, Any]):
     """Load the real checkpoint, tokenizer, and local calibration data identically."""
     import transformers
+    from compressed_tensors.offload import get_device_map
     from llmcompressor.utils import load_context
     from transformers import AutoConfig, AutoTokenizer
 
@@ -422,13 +423,14 @@ def load_real_inputs(config: dict[str, Any], profile: dict[str, Any]):
     dataset_started = time.monotonic()
     dataset = load_calibration_dataset(config, profile, tokenizer)
     dataset_seconds = time.monotonic() - dataset_started
+    device_map_counts: dict[str, int] = {}
+    for onload_device, offload_device in get_device_map(model).values():
+        placement = f"{onload_device}->{offload_device}"
+        device_map_counts[placement] = device_map_counts.get(placement, 0) + 1
     return model, tokenizer, dataset, {
         "load_seconds": load_seconds,
         "dataset_seconds": dataset_seconds,
-        "device_map_counts": {
-            str(device): list(getattr(model, "hf_device_map", {}).values()).count(device)
-            for device in sorted(set(getattr(model, "hf_device_map", {}).values()), key=str)
-        },
+        "compressed_tensors_device_map_counts": device_map_counts,
     }
 
 
@@ -460,8 +462,9 @@ def run_load_trace_only(config: dict[str, Any], profile: dict[str, Any]) -> dict
     timings["trace_seconds"] = time.monotonic() - trace_started
     if target_count != 64 or len(subgraphs) != 65:
         raise RuntimeError(f"Trace invariant failed: targets={target_count}, subgraphs={len(subgraphs)}")
-    if "disk" in timings["device_map_counts"]:
-        raise RuntimeError(f"Disk-offloaded modules are forbidden: {timings['device_map_counts']}")
+    device_counts = timings["compressed_tensors_device_map_counts"]
+    if not device_counts or any("disk" in placement for placement in device_counts):
+        raise RuntimeError(f"Invalid compressed-tensors device map: {device_counts}")
     cleanup_started = time.monotonic()
     del subgraphs, sample_input, dataset, tokenizer, model
     gc.collect()
