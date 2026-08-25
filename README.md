@@ -76,6 +76,11 @@ just validate
 just serve       # foreground server on port 8000
 just smoke       # from a second shell
 just bench
+
+# Standardized non-thinking text accuracy (lm-eval v0.4.12)
+just build-eval
+# Run the exact pushed feature commit inside a labeled tmux session:
+just eval-standardized <exact-pushed-commit>
 ```
 
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`.
@@ -91,6 +96,8 @@ The supported serving command uses TP2, a 2,048-token context, 0.88 GPU-memory u
 For the complete guarded sequence, install a timestamped copy of `scripts/quality_gate_supervisor.sh` under `/data/qwen38-int8-lab`, set `EXPECTED_COMMIT` to the merged `main` commit, and launch it in a newly named tmux session. The supervisor performs fresh host/repository/storage gates before tiny, small, and quality calibration, changes swappiness only around each calibration child process group, restores it exactly, validates direct vLLM loading, and halts without retry on the first failure.
 
 Passing this workflow means the artifact is a functional quality candidate: it is self-contained, loads through the intended native W8A8 path, produces the deterministic arithmetic answer, and completes performance measurement. It is not a standardized accuracy result; accuracy evaluation and vision/video inference remain separate work.
+
+The standardized accuracy workflow is defined in `eval/config/leaderboard-v2.yaml`. It pins the Open LLM Leaderboard v2 task group and all six dataset revisions, prefetches into a fresh private cache, proves identical request rendering with the BF16 and W8A8 tokenizers, and then runs offline. It evaluates all six groups on W8A8 and the four multiple-choice groups on BF16, using TP2 and the fixed 8,192-token non-thinking protocol. Raw samples—including gated GPQA rows—remain mode-restricted under `/data/qwen38-int8-lab/evaluations`; only reviewed aggregates belong in Git. Limited smoke results are gates and must never be reported as accuracy.
 
 ## Reproducibility
 

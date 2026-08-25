@@ -1,0 +1,138 @@
+schema_version: 1
+suite: open_llm_leaderboard_v2
+harness:
+  version: 0.4.12
+  git_revision: 6d642546f4688648fced259eb3302efd36ece5af
+  upstream_group: leaderboard
+  group_yaml_sha256: dcf26c03fadaff36643041bb8a6c16dba04ac0eba33117253a10011895781bcd
+scope: local protocol-qualified non-thinking text evaluation; not an official leaderboard submission
+models:
+  w8a8:
+    host_path: /data/models/Qwen3.8-27B-W8A8-INT8
+    container_path: /models/w8a8
+    max_batch_size: 4
+    cpu_offload_gb: 0
+  bf16:
+    host_path: /home/emmy/workspace/qwen3.8-27b-download/model
+    container_path: /models/bf16
+    max_batch_size: 2
+    cpu_offload_gb: 8
+datasets:
+  mmlu_pro:
+    path: TIGER-Lab/MMLU-Pro
+    revision: b189ec765aa7ed75c8acfea42df31fdae71f97be
+    configs: [null]
+    expected_splits: {__default__: {test: 12032, validation: 70}}
+  bbh:
+    path: SaylorTwift/bbh
+    revision: b5306be6f827cfafbb545ff5a51f96916029b0fd
+    configs:
+      - boolean_expressions
+      - causal_judgement
+      - date_understanding
+      - disambiguation_qa
+      - formal_fallacies
+      - geometric_shapes
+      - hyperbaton
+      - logical_deduction_five_objects
+      - logical_deduction_seven_objects
+      - logical_deduction_three_objects
+      - movie_recommendation
+      - navigate
+      - object_counting
+      - penguins_in_a_table
+      - reasoning_about_colored_objects
+      - ruin_names
+      - salient_translation_error_detection
+      - snarks
+      - sports_understanding
+      - temporal_sequences
+      - tracking_shuffled_objects_five_objects
+      - tracking_shuffled_objects_seven_objects
+      - tracking_shuffled_objects_three_objects
+      - web_of_lies
+    expected_splits:
+      boolean_expressions: {test: 250}
+      causal_judgement: {test: 187}
+      date_understanding: {test: 250}
+      disambiguation_qa: {test: 250}
+      formal_fallacies: {test: 250}
+      geometric_shapes: {test: 250}
+      hyperbaton: {test: 250}
+      logical_deduction_five_objects: {test: 250}
+      logical_deduction_seven_objects: {test: 250}
+      logical_deduction_three_objects: {test: 250}
+      movie_recommendation: {test: 250}
+      navigate: {test: 250}
+      object_counting: {test: 250}
+      penguins_in_a_table: {test: 146}
+      reasoning_about_colored_objects: {test: 250}
+      ruin_names: {test: 250}
+      salient_translation_error_detection: {test: 250}
+      snarks: {test: 178}
+      sports_understanding: {test: 250}
+      temporal_sequences: {test: 250}
+      tracking_shuffled_objects_five_objects: {test: 250}
+      tracking_shuffled_objects_seven_objects: {test: 250}
+      tracking_shuffled_objects_three_objects: {test: 250}
+      web_of_lies: {test: 250}
+  gpqa:
+    path: Idavidrein/gpqa
+    revision: 633f5ee89ab8ad4522a9f850766b73f62147ffdd
+    private: true
+    configs: [gpqa_diamond, gpqa_extended, gpqa_main]
+    expected_splits:
+      gpqa_diamond: {train: 198}
+      gpqa_extended: {train: 546}
+      gpqa_main: {train: 448}
+  math_hard:
+    path: DigitalLearningGmbH/MATH-lighteval
+    revision: 0530c78699ea5e8eb5530600900e1f328b48acad
+    configs: [algebra, counting_and_probability, geometry, intermediate_algebra, number_theory, prealgebra, precalculus]
+    expected_splits:
+      algebra: {train: 1744, test: 1187}
+      counting_and_probability: {train: 771, test: 474}
+      geometry: {train: 870, test: 479}
+      intermediate_algebra: {train: 1295, test: 903}
+      number_theory: {train: 869, test: 540}
+      prealgebra: {train: 1205, test: 871}
+      precalculus: {train: 746, test: 546}
+  ifeval:
+    path: wis-k/instruction-following-eval
+    revision: 5a5661c2a35488308556cf4453dc074d1eba91a0
+    configs: [null]
+    expected_splits: {__default__: {train: 541}}
+  musr:
+    path: TAUR-Lab/MuSR
+    revision: 7c365b439a222150f317764d4f16ae6c96d7d94a
+    configs: [default]
+    expected_splits: {default: {murder_mysteries: 250, object_placements: 256, team_allocation: 250}}
+tasks:
+  mmlu_pro: {harness_task: leaderboard_mmlu_pro, headline_metric: acc, paired: true, expected_eval_documents: 12032}
+  bbh: {harness_task: leaderboard_bbh, headline_metric: acc_norm, paired: true, expected_eval_documents: 5761}
+  gpqa: {harness_task: leaderboard_gpqa, headline_metric: acc_norm, paired: true, expected_eval_documents: 1192}
+  math_hard: {harness_task: leaderboard_math_hard, headline_metric: exact_match, paired: false, expected_eval_documents: 1324}
+  ifeval: {harness_task: leaderboard_ifeval, headline_metric: prompt_level_strict_acc, paired: false, expected_eval_documents: 541}
+  musr: {harness_task: leaderboard_musr, headline_metric: acc_norm, paired: true, expected_eval_documents: 756}
+protocol:
+  context_length: 8192
+  tensor_parallel_size: 2
+  gpu_memory_utilization: 0.88
+  kv_cache_dtype: bfloat16
+  dtype: bfloat16
+  seed: 42
+  apply_chat_template: true
+  enable_thinking: false
+  add_bos_token: false
+  special_tokens: {bos_token_id: null, eos_token_id: 248046, pad_token_id: 248044}
+  fewshot_as_multiturn: true
+  enforce_eager: true
+  enable_prefix_caching: false
+  enable_chunked_prefill: false
+  speculative_decoding: false
+  flashinfer_sampler: false
+acceptance:
+  bootstrap_replicates: 10000
+  bootstrap_seed: 42
+  macro_min_delta: -0.02
+  individual_min_delta: -0.05

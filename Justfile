@@ -8,6 +8,7 @@ source_model := env_var_or_default("SOURCE_MODEL", "/home/emmy/workspace/qwen3.8
 output_model := env_var_or_default("OUTPUT_MODEL", model_root + "/Qwen3.8-27B-W8A8-INT8")
 quant_image := env_var_or_default("QUANT_IMAGE", "qwen38-int8-lab/quant:0.1.0")
 vllm_image := env_var_or_default("VLLM_IMAGE", "qwen38-int8-lab/vllm:0.1.0")
+eval_image := env_var_or_default("EVAL_IMAGE", "qwen38-int8-lab/eval:0.1.0")
 port := env_var_or_default("PORT", "8000")
 served_model := env_var_or_default("SERVED_MODEL", "qwen38-w8a8")
 
@@ -55,6 +56,24 @@ quant:
 
 build-vllm:
     DOCKER_BUILDKIT=1 docker build --progress=plain --build-arg VCS_REF="$(git -C "{{repo_root}}" rev-parse HEAD)" -t "{{vllm_image}}" -f "{{repo_root}}/docker/vllm/Dockerfile" "{{repo_root}}"
+
+build-eval:
+    base_id=$(docker image inspect "{{vllm_image}}" | python3 -c 'import json,sys; print(json.load(sys.stdin)[0]["Id"])'); test "$base_id" = "sha256:60508d8dcbbb0a985955e9cf2f66e561a66c3f1c99bd7ec8fa5020e991a0ef4d"; DOCKER_BUILDKIT=1 docker build --progress=plain --build-arg VLLM_IMAGE="{{vllm_image}}" --build-arg VCS_REF="$(git -C "{{repo_root}}" rev-parse HEAD)" -t "{{eval_image}}" -f "{{repo_root}}/docker/eval/Dockerfile" "{{repo_root}}"
+
+eval-dataset-preflight cache_root output:
+    test ! -e "{{cache_root}}"; install -d -m 700 "{{cache_root}}"; output_parent=$(dirname "{{output}}"); install -d "$output_parent"; docker run --rm --user "$(id -u):$(id -g)" --mount type=bind,src="{{cache_root}}",dst=/cache --mount type=bind,src="$output_parent",dst=/out --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HF_TOKEN --env HF_HOME=/cache/huggingface --env HF_DATASETS_CACHE=/cache/huggingface/datasets --entrypoint python "{{eval_image}}" /app/eval/scripts/prefetch.py --output "/out/$(basename "{{output}}")"
+
+eval-request-preflight cache_root output:
+    output_parent=$(dirname "{{output}}"); install -d "$output_parent"; docker run --rm --user "$(id -u):$(id -g)" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{source_model}}",dst=/models/bf16,readonly --mount type=bind,src="{{cache_root}}",dst=/cache --mount type=bind,src="$output_parent",dst=/out --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HF_HOME=/cache/huggingface --env HF_DATASETS_CACHE=/cache/huggingface/datasets --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1 --entrypoint python "{{eval_image}}" /app/eval/scripts/request_preflight.py --candidate "/models/$(basename "{{output_model}}")" --source /models/bf16 --output "/out/$(basename "{{output}}")"
+
+eval-smoke run_root:
+    test -f "{{run_root}}/dataset-preflight.json"; docker run --rm --gpus all --ipc=host --user "$(id -u):$(id -g)" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{run_root}}",dst=/run --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HOME=/run/home --env HF_HOME=/run/cache/huggingface --env HF_DATASETS_CACHE=/run/cache/huggingface/datasets --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1 --env VLLM_USE_FLASHINFER_SAMPLER=0 --entrypoint python "{{eval_image}}" /app/eval/scripts/run_harness.py run --model vllm --model_args "pretrained=/models/$(basename "{{output_model}}"),dtype=bfloat16,tensor_parallel_size=2,max_model_len=8192,gpu_memory_utilization=0.88,kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,enable_chunked_prefill=False,add_bos_token=False,enable_thinking=False" --tasks leaderboard --limit 2 --batch_size auto --max_batch_size 4 --seed 42 --apply_chat_template --fewshot_as_multiturn --log_samples --output_path /run/smoke
+
+eval-validate cache_root:
+    docker run --rm --user "$(id -u):$(id -g)" --mount type=bind,src="{{cache_root}}",dst=/cache --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HF_HOME=/cache/huggingface --env HF_DATASETS_CACHE=/cache/huggingface/datasets --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1 --entrypoint python "{{eval_image}}" /app/eval/scripts/run_harness.py validate --tasks leaderboard
+
+eval-standardized expected_commit:
+    EXPECTED_COMMIT="{{expected_commit}}" EVAL_IMAGE="{{eval_image}}" "{{repo_root}}/scripts/accuracy_eval_supervisor.sh"
 
 shell-vllm:
     docker run --rm -it --gpus all --ipc=host --entrypoint /bin/bash --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -w /app "{{vllm_image}}"
