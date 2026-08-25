@@ -81,6 +81,8 @@ just bench
 just build-eval
 # Run the exact pushed feature commit inside a labeled tmux session:
 just eval-standardized <exact-pushed-commit>
+# Candidate scores only; intentionally omits the impractical local BF16 baseline:
+just eval-candidate-only <exact-pushed-commit>
 ```
 
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`.
@@ -97,7 +99,7 @@ For the complete guarded sequence, install a timestamped copy of `scripts/qualit
 
 Passing this workflow means the artifact is a functional quality candidate: it is self-contained, loads through the intended native W8A8 path, produces the deterministic arithmetic answer, and completes performance measurement. It is not a standardized accuracy result; accuracy evaluation and vision/video inference remain separate work.
 
-The standardized accuracy workflow is defined in `eval/config/leaderboard-v2.yaml`. It pins the Open LLM Leaderboard v2 task group and all six dataset revisions, prefetches into a fresh private cache, proves identical request rendering with the BF16 and W8A8 tokenizers, and then runs offline. It evaluates all six groups on W8A8 and the four multiple-choice groups on BF16, using TP2, batch size 1, and the fixed 16,384-token non-thinking protocol. Raw samples—including gated GPQA rows—remain mode-restricted under `/data/qwen38-int8-lab/evaluations`; only reviewed aggregates belong in Git. Limited smoke results are gates and must never be reported as accuracy.
+The standardized accuracy workflow is defined in `eval/config/leaderboard-v2.yaml`. It pins the Open LLM Leaderboard v2 task group and all six dataset revisions, prefetches into a fresh private cache, proves identical request rendering with the BF16 and W8A8 tokenizers, and then runs offline. The default `paired` scope evaluates all six groups on W8A8 and the four multiple-choice groups on BF16. The explicit `candidate-only` scope evaluates all six W8A8 groups but omits BF16 inference; its aggregate must remain `candidate_scores_only_no_retention_or_deployment_recommendation`. Both use TP2, batch size 1, and the fixed 16,384-token non-thinking protocol. Raw samples—including gated GPQA rows—remain mode-restricted under `/data/qwen38-int8-lab/evaluations`; only reviewed aggregates belong in Git. Limited smoke results are gates and must never be reported as accuracy.
 
 ## Reproducibility
 

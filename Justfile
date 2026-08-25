@@ -76,6 +76,9 @@ eval-validate cache_root:
 eval-standardized expected_commit:
     EXPECTED_COMMIT="{{expected_commit}}" EVAL_IMAGE="{{eval_image}}" "{{repo_root}}/scripts/accuracy_eval_supervisor.sh"
 
+eval-candidate-only expected_commit:
+    EVAL_SCOPE=candidate-only EXPECTED_COMMIT="{{expected_commit}}" EVAL_IMAGE="{{eval_image}}" "{{repo_root}}/scripts/accuracy_eval_supervisor.sh"
+
 shell-vllm:
     docker run --rm -it --gpus all --ipc=host --entrypoint /bin/bash --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -w /app "{{vllm_image}}"
 

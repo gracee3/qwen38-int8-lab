@@ -12,6 +12,7 @@ readonly EVAL_IMAGE=${EVAL_IMAGE:-qwen38-int8-lab/eval:0.1.0}
 readonly SUITE_CONFIG=${REPO}/eval/config/leaderboard-v2.yaml
 readonly EXPECTED_COMMIT=${EXPECTED_COMMIT:?set EXPECTED_COMMIT to the exact pushed feature commit}
 readonly EXPECTED_BRANCH=${EXPECTED_BRANCH:-feat/standardized-accuracy-eval}
+readonly EVAL_SCOPE=${EVAL_SCOPE:-paired}
 readonly RUN_ID=${RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
 readonly RUN_ROOT=${RUN_BASE}/${RUN_ID}
 readonly PROTECTED_SERIAL=S7KHNU0X722442H
@@ -34,6 +35,10 @@ FAILURE_REASON=
 
 if (( EUID == 0 )); then
     printf 'error=supervisor_must_run_as_emmy\n' >&2
+    exit 77
+fi
+if [[ ${EVAL_SCOPE} != paired && ${EVAL_SCOPE} != candidate-only ]]; then
+    printf 'error=unexpected_eval_scope scope=%s\n' "${EVAL_SCOPE}" >&2
     exit 77
 fi
 if [[ $(id -un) != emmy ]]; then
@@ -140,11 +145,11 @@ host_preflight() {
 }
 
 write_identities() {
-    python3 - "${RUN_ROOT}/git-identity.json" "${EXPECTED_COMMIT}" "${EXPECTED_BRANCH}" <<'PY'
+    python3 - "${RUN_ROOT}/git-identity.json" "${EXPECTED_COMMIT}" "${EXPECTED_BRANCH}" "${EVAL_SCOPE}" <<'PY'
 import json, os, sys
-path, commit, branch = sys.argv[1:]
+path, commit, branch, scope = sys.argv[1:]
 with open(path, "x", encoding="utf-8") as handle:
-    json.dump({"commit": commit, "branch": branch}, handle, indent=2, sort_keys=True)
+    json.dump({"commit": commit, "branch": branch, "evaluation_scope": scope}, handle, indent=2, sort_keys=True)
     handle.write("\n")
 os.chmod(path, 0o600)
 PY
@@ -411,7 +416,9 @@ write_identities
 write_model_manifests before
 prefetch_and_validate
 run_eval_stage w8a8 smoke leaderboard 2
-run_eval_stage bf16 smoke-bf16 leaderboard 2
+if [[ ${EVAL_SCOPE} == paired ]]; then
+    run_eval_stage bf16 smoke-bf16 leaderboard 2
+fi
 for group in mmlu_pro bbh gpqa math_hard ifeval musr; do
     harness_task=$(python3 - "${REPO}/eval/config/leaderboard-v2.yaml" "${group}" <<'PY'
 import sys, yaml
@@ -421,15 +428,17 @@ PY
 )
     run_eval_stage w8a8 "w8a8-${group}" "${harness_task}"
 done
-for group in mmlu_pro bbh gpqa musr; do
-    harness_task=$(python3 - "${REPO}/eval/config/leaderboard-v2.yaml" "${group}" <<'PY'
+if [[ ${EVAL_SCOPE} == paired ]]; then
+    for group in mmlu_pro bbh gpqa musr; do
+        harness_task=$(python3 - "${REPO}/eval/config/leaderboard-v2.yaml" "${group}" <<'PY'
 import sys, yaml
 with open(sys.argv[1], encoding="utf-8") as f: config=yaml.safe_load(f)
 print(config["tasks"][sys.argv[2]]["harness_task"])
 PY
-)
-    run_eval_stage bf16 "bf16-${group}" "${harness_task}"
-done
+        )
+        run_eval_stage bf16 "bf16-${group}" "${harness_task}"
+    done
+fi
 CURRENT_STAGE=postflight
 host_preflight
 write_model_manifests after
