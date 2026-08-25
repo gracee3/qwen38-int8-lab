@@ -115,6 +115,6 @@ As of 2026-08-24:
 - Both pinned Docker images build and see both SM86 GPUs. The exact resolved environments are checked in.
 - The sequential synthetic gate passes calibration, GPTQ W8A8 compression, Safetensors serialization, index inspection, and quantization-metadata validation. It recorded about 2.0 GiB peak process RSS and 364/266 MiB peak GPU memory.
 - The guarded 32-sample scaling gate and 512-sample quality calibration passed; the self-contained candidate is at `/data/models/Qwen3.8-27B-W8A8-INT8`.
-- The standardized accuracy infrastructure is published in draft PR #10. Exact-commit run `20260825T023823Z` stopped during pinned dataset prefetch because the existing Hugging Face credential lacks accepted access to gated GPQA. No score or deployment/retention decision is available.
+- The standardized accuracy infrastructure is published in draft PR #10. GPQA access is accepted and all six pinned datasets now prefetch and validate offline. Exact-commit run `20260825T031746Z` then stopped at the mandatory zero-truncation gate because a task-defined GPQA Extended request renders to 12,314 tokens under the fixed 8,192-token protocol. No model was loaded and no score or deployment/retention decision is available.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
