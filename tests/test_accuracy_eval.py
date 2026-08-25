@@ -74,6 +74,8 @@ class SuitePolicyTests(unittest.TestCase):
 
     def test_retention_thresholds_and_pairing(self):
         self.assertEqual(self.config["protocol"]["context_length"], 16384)
+        self.assertEqual(self.config["models"]["w8a8"]["max_batch_size"], 1)
+        self.assertEqual(self.config["models"]["bf16"]["max_batch_size"], 1)
         self.assertEqual(self.config["acceptance"]["bootstrap_replicates"], 10000)
         self.assertEqual(self.config["acceptance"]["bootstrap_seed"], 42)
         self.assertEqual(self.config["acceptance"]["macro_min_delta"], -0.02)

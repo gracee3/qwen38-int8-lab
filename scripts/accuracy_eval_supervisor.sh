@@ -261,9 +261,9 @@ run_eval_stage() {
     install -d -m 700 "${temporary}/results"
     log=${temporary}/harness.log
     if [[ ${model} == w8a8 ]]; then
-        model_path=/models/w8a8; max_batch=4; cpu_offload=0
+        model_path=/models/w8a8; max_batch=1; cpu_offload=0
     else
-        model_path=/models/bf16; max_batch=2; cpu_offload=8
+        model_path=/models/bf16; max_batch=1; cpu_offload=8
     fi
     CURRENT_CONTAINER="qwen38-eval-${RUN_ID}-${stage_name}"
     model_args="pretrained=${model_path},dtype=bfloat16,tensor_parallel_size=2,max_model_len=${CONTEXT_LENGTH},gpu_memory_utilization=0.88,kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,enable_chunked_prefill=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=${cpu_offload}"

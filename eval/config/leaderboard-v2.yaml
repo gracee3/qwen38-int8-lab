@@ -10,12 +10,12 @@ models:
   w8a8:
     host_path: /data/models/Qwen3.8-27B-W8A8-INT8
     container_path: /models/w8a8
-    max_batch_size: 4
+    max_batch_size: 1
     cpu_offload_gb: 0
   bf16:
     host_path: /home/emmy/workspace/qwen3.8-27b-download/model
     container_path: /models/bf16
-    max_batch_size: 2
+    max_batch_size: 1
     cpu_offload_gb: 8
 datasets:
   mmlu_pro:
