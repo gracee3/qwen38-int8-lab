@@ -196,8 +196,15 @@ container_common=(
 prefetch_and_validate() {
     CURRENT_STAGE=dataset_prefetch
     host_preflight
-    docker run "${container_common[@]}" --env HF_TOKEN --entrypoint python "${EVAL_IMAGE}" \
-        /app/eval/scripts/prefetch.py --output /run/dataset-preflight.json
+    if ! docker run "${container_common[@]}" --env HF_TOKEN --entrypoint python "${EVAL_IMAGE}" \
+        /app/eval/scripts/prefetch.py --output /run/dataset-preflight.json; then
+        if [[ -f ${RUN_ROOT}/dataset-preflight.json ]]; then
+            FAILURE_REASON=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1],encoding="utf-8"))["blocker"])' "${RUN_ROOT}/dataset-preflight.json")
+        else
+            FAILURE_REASON=dataset_prefetch_failed_without_status
+        fi
+        return 1
+    fi
     chmod 600 "${RUN_ROOT}/dataset-preflight.json"
     CURRENT_STAGE=task_validation
     host_preflight

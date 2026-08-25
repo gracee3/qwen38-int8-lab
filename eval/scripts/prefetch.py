@@ -22,37 +22,54 @@ def main() -> None:
     original = install(pins, offline=False)
 
     records = {}
-    for key, entry in config["datasets"].items():
-        variants = {}
-        for name in entry["configs"]:
-            dataset = original(
-                path=entry["path"],
-                name=name,
-                revision=entry["revision"],
-                token=os.environ.get("HF_TOKEN") or None,
-            )
-            splits = {
-                split: {"count": len(value), "fingerprint": value._fingerprint}
-                for split, value in sorted(dataset.items())
-            }
-            variant = "__default__" if name is None else name
-            observed_counts = {split: value["count"] for split, value in splits.items()}
-            expected_counts = entry["expected_splits"][variant]
-            if observed_counts != expected_counts:
-                raise RuntimeError(
-                    f"dataset split counts differ for {key}/{variant}: "
-                    f"expected {expected_counts}, got {observed_counts}"
+    current_key = "not_started"
+    try:
+        for key, entry in config["datasets"].items():
+            current_key = key
+            variants = {}
+            for name in entry["configs"]:
+                dataset = original(
+                    path=entry["path"],
+                    name=name,
+                    revision=entry["revision"],
+                    token=os.environ.get("HF_TOKEN") or None,
                 )
-            variants[variant] = splits
-        records[key] = {
-            "path": entry["path"],
-            "revision": entry["revision"],
-            "private": bool(entry.get("private", False)),
-            "variants": variants,
+                splits = {
+                    split: {"count": len(value), "fingerprint": value._fingerprint}
+                    for split, value in sorted(dataset.items())
+                }
+                variant = "__default__" if name is None else name
+                observed_counts = {
+                    split: value["count"] for split, value in splits.items()
+                }
+                expected_counts = entry["expected_splits"][variant]
+                if observed_counts != expected_counts:
+                    raise RuntimeError(
+                        f"dataset split counts differ for {key}/{variant}: "
+                        f"expected {expected_counts}, got {observed_counts}"
+                    )
+                variants[variant] = splits
+            records[key] = {
+                "path": entry["path"],
+                "revision": entry["revision"],
+                "private": bool(entry.get("private", False)),
+                "variants": variants,
+            }
+    except Exception as error:
+        payload = {
+            "schema_version": 1,
+            "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "status": "failed",
+            "cache_root": str(Path(os.environ["HF_HOME"])),
+            "datasets": records,
+            "blocker": f"dataset_prefetch_failed:{current_key}:{type(error).__name__}",
         }
+        atomic_json(args.output, payload)
+        raise
     payload = {
         "schema_version": 1,
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "status": "passed",
         "cache_root": str(Path(os.environ["HF_HOME"])),
         "datasets": records,
     }

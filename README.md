@@ -10,7 +10,7 @@ compressed-tensors / Safetensors
 RTX 3090 native INT8 / CUTLASS
 ```
 
-The final kernel-dispatch line is a validation target, not a completed claim. Native `CompressedTensorsW8A8Int8 → CutlassInt8ScaledMMLinearKernel` execution has not yet been observed for this checkpoint.
+The self-contained quality candidate has loaded directly through native `CompressedTensorsW8A8Int8 → CutlassInt8ScaledMMLinearKernel` execution. Standardized accuracy remains blocked as described below.
 
 ## Scope and hardware
 
@@ -114,7 +114,7 @@ As of 2026-08-24:
 - The host has two visible RTX 3090 GPUs and an NVIDIA-capable Docker runtime.
 - Both pinned Docker images build and see both SM86 GPUs. The exact resolved environments are checked in.
 - The sequential synthetic gate passes calibration, GPTQ W8A8 compression, Safetensors serialization, index inspection, and quantization-metadata validation. It recorded about 2.0 GiB peak process RSS and 364/266 MiB peak GPU memory.
-- A two-sample experimental artifact completed and loaded with vLLM TP2 through `CutlassInt8ScaledMMLinearKernel`; it exposed the processor-file packaging defect repaired by the current quality-gate work.
-- The 32-sample scaling and 512-sample quality calibrations have not yet been run.
+- The guarded 32-sample scaling gate and 512-sample quality calibration passed; the self-contained candidate is at `/data/models/Qwen3.8-27B-W8A8-INT8`.
+- The standardized accuracy infrastructure is published in draft PR #10. Exact-commit run `20260825T023823Z` stopped during pinned dataset prefetch because the existing Hugging Face credential lacks accepted access to gated GPQA. No score or deployment/retention decision is available.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
