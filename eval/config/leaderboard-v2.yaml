@@ -115,7 +115,7 @@ tasks:
   ifeval: {harness_task: leaderboard_ifeval, headline_metric: prompt_level_strict_acc, paired: false, expected_eval_documents: 541}
   musr: {harness_task: leaderboard_musr, headline_metric: acc_norm, paired: true, expected_eval_documents: 756}
 protocol:
-  context_length: 8192
+  context_length: 16384
   tensor_parallel_size: 2
   gpu_memory_utilization: 0.88
   kv_cache_dtype: bfloat16

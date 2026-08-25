@@ -81,7 +81,7 @@ def encode_request(tokenizer: Any, request: Any) -> tuple[str, list[int], int, s
 
 
 def build_for(
-    tokenizer: Any, task_config: dict[str, Any]
+    tokenizer: Any, task_config: dict[str, Any], context_length: int
 ) -> tuple[Summary, dict[str, dict[str, int]], dict[str, int]]:
     from lm_eval.tasks import TaskManager
 
@@ -115,7 +115,11 @@ def build_for(
             for request in task.instances:
                 rendered, ids, reserve, request_type = encode_request(tokenizer, request)
                 total = len(ids) + reserve
-                runtime_limit = 8191 if request_type == "loglikelihood" else 8192
+                runtime_limit = (
+                    context_length - 1
+                    if request_type == "loglikelihood"
+                    else context_length
+                )
                 if total > runtime_limit:
                     raise RuntimeError(
                         f"request would truncate at runtime: task={task_name} "
@@ -178,10 +182,13 @@ def main() -> None:
             f"unexpected special-token IDs: expected {expected_special}, got {observed_special}"
         )
 
+    context_length = int(config["protocol"]["context_length"])
     candidate_summary, candidate_tasks, candidate_groups = build_for(
-        candidate, config["tasks"]
+        candidate, config["tasks"], context_length
     )
-    source_summary, source_tasks, source_groups = build_for(source, config["tasks"])
+    source_summary, source_tasks, source_groups = build_for(
+        source, config["tasks"], context_length
+    )
     if (
         candidate_summary.as_dict() != source_summary.as_dict()
         or candidate_tasks != source_tasks
@@ -192,7 +199,7 @@ def main() -> None:
         "schema_version": 1,
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "status": "passed",
-        "context_limit": 8192,
+        "context_limit": context_length,
         "runtime_truncation_allowed": False,
         "tokenizer_identity": candidate_identity,
         "requests": candidate_summary.as_dict(),

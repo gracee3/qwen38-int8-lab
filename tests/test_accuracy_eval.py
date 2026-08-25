@@ -73,6 +73,7 @@ class SuitePolicyTests(unittest.TestCase):
         self.assertTrue(all(len(revision) == 40 for revision in revisions))
 
     def test_retention_thresholds_and_pairing(self):
+        self.assertEqual(self.config["protocol"]["context_length"], 16384)
         self.assertEqual(self.config["acceptance"]["bootstrap_replicates"], 10000)
         self.assertEqual(self.config["acceptance"]["bootstrap_seed"], 42)
         self.assertEqual(self.config["acceptance"]["macro_min_delta"], -0.02)
@@ -87,6 +88,16 @@ class SuitePolicyTests(unittest.TestCase):
         for line in lock.splitlines():
             if line and not line.startswith("#"):
                 self.assertIn("==", line)
+
+    def test_supervisor_smokes_both_models_before_scoring(self):
+        supervisor = (ROOT / "scripts/accuracy_eval_supervisor.sh").read_text(
+            encoding="utf-8"
+        )
+        w8a8_smoke = supervisor.index("run_eval_stage w8a8 smoke leaderboard 2")
+        bf16_smoke = supervisor.index("run_eval_stage bf16 smoke-bf16 leaderboard 2")
+        first_score = supervisor.index("for group in mmlu_pro bbh gpqa math_hard ifeval musr")
+        self.assertLess(w8a8_smoke, bf16_smoke)
+        self.assertLess(bf16_smoke, first_score)
 
 
 class AggregationTests(unittest.TestCase):

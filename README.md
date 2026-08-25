@@ -97,7 +97,7 @@ For the complete guarded sequence, install a timestamped copy of `scripts/qualit
 
 Passing this workflow means the artifact is a functional quality candidate: it is self-contained, loads through the intended native W8A8 path, produces the deterministic arithmetic answer, and completes performance measurement. It is not a standardized accuracy result; accuracy evaluation and vision/video inference remain separate work.
 
-The standardized accuracy workflow is defined in `eval/config/leaderboard-v2.yaml`. It pins the Open LLM Leaderboard v2 task group and all six dataset revisions, prefetches into a fresh private cache, proves identical request rendering with the BF16 and W8A8 tokenizers, and then runs offline. It evaluates all six groups on W8A8 and the four multiple-choice groups on BF16, using TP2 and the fixed 8,192-token non-thinking protocol. Raw samples—including gated GPQA rows—remain mode-restricted under `/data/qwen38-int8-lab/evaluations`; only reviewed aggregates belong in Git. Limited smoke results are gates and must never be reported as accuracy.
+The standardized accuracy workflow is defined in `eval/config/leaderboard-v2.yaml`. It pins the Open LLM Leaderboard v2 task group and all six dataset revisions, prefetches into a fresh private cache, proves identical request rendering with the BF16 and W8A8 tokenizers, and then runs offline. It evaluates all six groups on W8A8 and the four multiple-choice groups on BF16, using TP2 and the fixed 16,384-token non-thinking protocol. Raw samples—including gated GPQA rows—remain mode-restricted under `/data/qwen38-int8-lab/evaluations`; only reviewed aggregates belong in Git. Limited smoke results are gates and must never be reported as accuracy.
 
 ## Reproducibility
 
@@ -115,6 +115,6 @@ As of 2026-08-24:
 - Both pinned Docker images build and see both SM86 GPUs. The exact resolved environments are checked in.
 - The sequential synthetic gate passes calibration, GPTQ W8A8 compression, Safetensors serialization, index inspection, and quantization-metadata validation. It recorded about 2.0 GiB peak process RSS and 364/266 MiB peak GPU memory.
 - The guarded 32-sample scaling gate and 512-sample quality calibration passed; the self-contained candidate is at `/data/models/Qwen3.8-27B-W8A8-INT8`.
-- The standardized accuracy infrastructure is published in draft PR #10. GPQA access is accepted and all six pinned datasets now prefetch and validate offline. Exact-commit run `20260825T031746Z` then stopped at the mandatory zero-truncation gate because a task-defined GPQA Extended request renders to 12,314 tokens under the fixed 8,192-token protocol. No model was loaded and no score or deployment/retention decision is available.
+- The standardized accuracy infrastructure is published in draft PR #10. GPQA access is accepted and all six pinned datasets prefetch and validate offline. Exact-commit run `20260825T031746Z` showed that one zero-shot GPQA Extended document renders four 12,314-token choice requests, exceeding the former 8,192-token protocol. A complete audit found 12,314 tokens is the suite maximum, so the reviewed follow-up protocol uses a uniform 16,384-token context without truncation.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.

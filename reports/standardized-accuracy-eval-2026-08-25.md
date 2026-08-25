@@ -4,7 +4,7 @@
 
 GPQA access is now accepted and was verified at the pinned revision. Fresh exact-commit run `20260825T031746Z` prefetched and validated all six pinned datasets offline, then stopped at the mandatory request-length preflight before loading either model.
 
-The first incompatible request was `leaderboard_gpqa_extended` document ID 356: its task-defined few-shot log-likelihood request renders to 12,314 tokens, exceeding the 8,191-token runtime request limit for the fixed 8,192-token context protocol. The supervisor did not truncate or retry it.
+The first incompatible request was `leaderboard_gpqa_extended` document ID 356: its zero-shot log-likelihood request renders to 12,314 tokens, exceeding the 8,191-token runtime request limit for the fixed 8,192-token context protocol. The supervisor did not truncate or retry it.
 
 No smoke or scored group ran. There are no W8A8 scores, BF16 scores, retention result, or deployment recommendation.
 
@@ -25,4 +25,4 @@ Private evidence is under `/data/qwen38-int8-lab/evaluations/20260825T031746Z`. 
 
 ## Next action
 
-Choose and review a protocol change before another run. The fixed Open LLM Leaderboard v2 GPQA group cannot be evaluated without truncation under the current 8,192-token context. Plausible changes are increasing the evaluation context enough for every rendered request or defining a different GPQA task/few-shot protocol; either changes the approved protocol and requires a new exact-commit run. Do not report partial smoke output as accuracy and do not make a retention or deployment decision unless all four BF16 comparisons complete.
+The approved follow-up is a uniform 16,384-token context. A complete metadata-only audit found the 12,314-token GPQA request is the maximum across the full suite, so the new limit preserves every official request without truncation. Publish and smoke-test the exact revised commit before starting a fresh supervisor. Do not report partial smoke output as accuracy and do not make a retention or deployment decision unless all four BF16 comparisons complete.

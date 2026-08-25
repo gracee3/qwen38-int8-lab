@@ -213,7 +213,7 @@ def markdown(payload: dict[str, Any]) -> str:
         "",
         "## Scope",
         "",
-        payload["scope"] + ". A passing result applies only to non-thinking text under the 8,192-token protocol; it does not cover multimodal, long-context, safety, or task-specific production quality.",
+        payload["scope"] + f". A passing result applies only to non-thinking text under the {payload['protocol']['context_length']:,}-token protocol; it does not cover multimodal, very-long-context, safety, or task-specific production quality.",
         "",
         f"Private evidence: `{payload['evidence_root']}`. No gated sample content is included in this report.",
     ]

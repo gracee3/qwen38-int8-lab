@@ -9,6 +9,7 @@ readonly RUN_BASE=/data/qwen38-int8-lab/evaluations
 readonly CANDIDATE=/data/models/Qwen3.8-27B-W8A8-INT8
 readonly SOURCE=/home/emmy/workspace/qwen3.8-27b-download/model
 readonly EVAL_IMAGE=${EVAL_IMAGE:-qwen38-int8-lab/eval:0.1.0}
+readonly SUITE_CONFIG=${REPO}/eval/config/leaderboard-v2.yaml
 readonly EXPECTED_COMMIT=${EXPECTED_COMMIT:?set EXPECTED_COMMIT to the exact pushed feature commit}
 readonly EXPECTED_BRANCH=${EXPECTED_BRANCH:-feat/standardized-accuracy-eval}
 readonly RUN_ID=${RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
@@ -18,6 +19,13 @@ readonly MIN_MEM_KIB=$((80 * 1024 * 1024))
 readonly STOP_MEM_KIB=$((8 * 1024 * 1024))
 readonly MIN_DISK_BYTES=$((100 * 1024 * 1024 * 1024))
 readonly MAX_SWAP_GROWTH_KIB=$((4 * 1024 * 1024))
+CONTEXT_LENGTH=$(python3 - "${SUITE_CONFIG}" <<'PY'
+import sys, yaml
+with open(sys.argv[1], encoding="utf-8") as handle:
+    print(int(yaml.safe_load(handle)["protocol"]["context_length"]))
+PY
+)
+readonly CONTEXT_LENGTH
 
 CURRENT_STAGE=not_started
 CURRENT_CONTAINER=
@@ -258,7 +266,7 @@ run_eval_stage() {
         model_path=/models/bf16; max_batch=2; cpu_offload=8
     fi
     CURRENT_CONTAINER="qwen38-eval-${RUN_ID}-${stage_name}"
-    model_args="pretrained=${model_path},dtype=bfloat16,tensor_parallel_size=2,max_model_len=8192,gpu_memory_utilization=0.88,kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,enable_chunked_prefill=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=${cpu_offload}"
+    model_args="pretrained=${model_path},dtype=bfloat16,tensor_parallel_size=2,max_model_len=${CONTEXT_LENGTH},gpu_memory_utilization=0.88,kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,enable_chunked_prefill=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=${cpu_offload}"
     command=(
         docker run "${container_common[@]}" --name "${CURRENT_CONTAINER}"
         --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1
@@ -337,7 +345,7 @@ run_eval_stage() {
 import json, math, sys, yaml
 result_path, config_path, stage = sys.argv[1:]
 with open(result_path, encoding="utf-8") as f: result=json.load(f)
-if stage == "smoke":
+if stage.startswith("smoke"):
     if not result.get("results"):
         raise SystemExit("smoke result has no tasks")
     raise SystemExit(0)
@@ -399,6 +407,7 @@ write_identities
 write_model_manifests before
 prefetch_and_validate
 run_eval_stage w8a8 smoke leaderboard 2
+run_eval_stage bf16 smoke-bf16 leaderboard 2
 for group in mmlu_pro bbh gpqa math_hard ifeval musr; do
     harness_task=$(python3 - "${REPO}/eval/config/leaderboard-v2.yaml" "${group}" <<'PY'
 import sys, yaml
