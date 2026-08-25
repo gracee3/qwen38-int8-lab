@@ -98,6 +98,8 @@ class SuitePolicyTests(unittest.TestCase):
         first_score = supervisor.index("for group in mmlu_pro bbh gpqa math_hard ifeval musr")
         self.assertLess(w8a8_smoke, bf16_smoke)
         self.assertLess(bf16_smoke, first_score)
+        self.assertIn("--user 0:0", supervisor)
+        self.assertIn("container_eval.sh", supervisor)
 
 
 class AggregationTests(unittest.TestCase):

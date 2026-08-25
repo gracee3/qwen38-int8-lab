@@ -269,9 +269,13 @@ run_eval_stage() {
     model_args="pretrained=${model_path},dtype=bfloat16,tensor_parallel_size=2,max_model_len=${CONTEXT_LENGTH},gpu_memory_utilization=0.88,kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,enable_chunked_prefill=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=${cpu_offload}"
     command=(
         docker run "${container_common[@]}" --name "${CURRENT_CONTAINER}"
+        --user 0:0
         --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1
         --env VLLM_USE_FLASHINFER_SAMPLER=0 --env VLLM_CACHE_ROOT=/run/cache/vllm
-        --entrypoint python "${EVAL_IMAGE}" /app/eval/scripts/run_harness.py run
+        --env EVAL_OUTPUT_PATH="/run/stages/.${stage_name}.tmp"
+        --env EVAL_OUTPUT_UID="$(id -u)" --env EVAL_OUTPUT_GID="$(id -g)"
+        --entrypoint /bin/bash "${EVAL_IMAGE}" /app/eval/scripts/container_eval.sh
+        python /app/eval/scripts/run_harness.py run
         --model vllm --model_args "${model_args}" --tasks "${tasks}"
         --batch_size auto --max_batch_size "${max_batch}" --seed 42
         --apply_chat_template --fewshot_as_multiturn --log_samples
