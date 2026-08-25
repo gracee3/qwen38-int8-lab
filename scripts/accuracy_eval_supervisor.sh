@@ -96,7 +96,7 @@ protected_disk_check() {
 }
 
 host_preflight() {
-    local commit branch remote_commit mem disk compute session_route
+    local commit branch remote_commit mem disk compute session_route image_revision image_base
     commit=$(git -C "${REPO}" rev-parse HEAD)
     branch=$(git -C "${REPO}" branch --show-current)
     remote_commit=$(git ls-remote origin "refs/heads/${EXPECTED_BRANCH}" | awk '{print $1}')
@@ -118,6 +118,12 @@ host_preflight() {
     [[ -d ${CANDIDATE} && -d ${SOURCE} ]] || { FAILURE_REASON=model_missing; return 1; }
     systemctl is-active --quiet ssh docker containerd || { FAILURE_REASON=required_service_inactive; return 1; }
     docker info >/dev/null || { FAILURE_REASON=docker_unavailable; return 1; }
+    image_revision=$(docker image inspect "${EVAL_IMAGE}" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
+    image_base=$(docker image inspect "${EVAL_IMAGE}" --format '{{index .Config.Labels "org.opencontainers.image.base.digest"}}')
+    [[ ${image_revision} == "${EXPECTED_COMMIT}" ]] || { FAILURE_REASON=evaluation_image_commit_mismatch; return 1; }
+    [[ ${image_base} == sha256:60508d8dcbbb0a985955e9cf2f66e561a66c3f1c99bd7ec8fa5020e991a0ef4d ]] || {
+        FAILURE_REASON=evaluation_image_base_mismatch; return 1;
+    }
     session_route=$(ip route get 1.1.1.1 | head -n 1)
     [[ ${session_route} == *"dev wlx00c0cab51e69"* ]] || { FAILURE_REASON=unexpected_default_route; return 1; }
     protected_disk_check
