@@ -109,7 +109,7 @@ Benchmark scripts write JSON under `/data/qwen38-int8-lab/results`; only reviewe
 
 ## Current status
 
-As of 2026-08-24:
+As of 2026-08-29:
 
 - The local source is complete: 18 Safetensors shards, 1,199 tensors, about 51.75 GiB of shard files.
 - Metadata identifies `Qwen3_5ForConditionalGeneration`: 64 text layers (48 recurrent/linear-attention and 16 full-attention), a 27-layer vision tower, and one MTP layer.
@@ -119,5 +119,8 @@ As of 2026-08-24:
 - The guarded 32-sample scaling gate and 512-sample quality calibration passed; the self-contained candidate is at `/data/models/Qwen3.8-27B-W8A8-INT8`.
 - The standardized accuracy infrastructure is published in draft PR #10. GPQA access is accepted and all six pinned datasets prefetch and validate offline. Exact-commit run `20260825T031746Z` showed that one zero-shot GPQA Extended document renders four 12,314-token choice requests, exceeding the former 8,192-token protocol. A complete audit found 12,314 tokens is the suite maximum, so the reviewed follow-up protocol uses a uniform 16,384-token context without truncation.
 - A former full-group attempt exhausted GPU memory while producing prompt log-probabilities. The candidate-only retry therefore uses text-only loading, chunked prefill, and an explicit bounded KV allocation, with the suite maximum executed as a mandatory runtime gate before smoke.
+- The revised preflight, 12,314-token runtime log-likelihood gate, and limited W8A8 smoke passed. MMLU-Pro was manually paused at 5,811/113,990 requests to prioritize interactive inference; there is no reportable accuracy score, and later resumption restarts that group from zero.
+- A loopback-only vLLM server is running the candidate at 16K. Native Rust Goose and standalone Qwen Code both completed real local tool calls; Goose is the lower-overhead interactive default. Direct Codex Responses connectivity works, but the current Codex prompt/tool envelope exceeds the 16K runtime window.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
+See `reports/evaluation-and-agent-status-2026-08-29.md` for the complete attempt ledger, dataset map, agent results, public W8A8 comparison, and next evaluation ladder.

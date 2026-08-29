@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-08-29",
+  "artifact": {
+    "path": "/data/models/Qwen3.8-27B-W8A8-INT8",
+    "bytes": 36798458455,
+    "files": 45,
+    "format": "compressed-tensors_w8a8_int8",
+    "quantized_projection_count": 256,
+    "self_contained": true,
+    "native_cutlass_dispatch": true
+  },
+  "calibration": {
+    "dataset": "HuggingFaceH4/ultrachat_200k",
+    "revision": "8049631c405ae6576f93f445c6b8166f76f5505a",
+    "split": "train_sft",
+    "samples": 512,
+    "token_cap": 2048,
+    "seed": 42
+  },
+  "runtime_protocol": {
+    "context_tokens": 16384,
+    "tensor_parallel_size": 2,
+    "kv_cache_dtype": "bfloat16",
+    "language_model_only": true,
+    "enable_chunked_prefill": true,
+    "max_num_batched_tokens": 1024,
+    "kv_cache_memory_bytes_per_gpu": 805306368,
+    "cpu_offload_gb": 0,
+    "enable_thinking": false,
+    "observed_kv_capacity_tokens": 21162,
+    "maximum_request_tokens": 12314
+  },
+  "evaluation": {
+    "suite": "open_llm_leaderboard_v2_local_protocol",
+    "groups": [
+      "mmlu_pro",
+      "bbh",
+      "gpqa",
+      "math_hard",
+      "ifeval",
+      "musr"
+    ],
+    "rendered_requests": 154531,
+    "preflight_status": "passed",
+    "runtime_loglikelihood_gate_status": "passed",
+    "limited_smoke_status": "passed_non_reportable",
+    "reportable_scores_available": false,
+    "mmlu_pro": {
+      "status": "manually_paused",
+      "processed_prompts": 5811,
+      "total_prompts": 113990,
+      "progress_fraction": 0.050977,
+      "resume_semantics": "restart_stage_from_zero"
+    },
+    "decision": "candidate_scores_only_no_retention_or_deployment_recommendation"
+  },
+  "interactive": {
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "served_model": "qwen38-w8a8",
+    "recommended_harness": "goose_1.48.0",
+    "goose_tool_test": "passed",
+    "qwen_code_0_22_3_tool_test": "passed",
+    "codex_cli_0_151_0": "responses_endpoint_passed_but_agent_prompt_exceeded_16k"
+  },
+  "public_comparison": {
+    "repo": "RukaRat/Qwen3.8-27B-INT8-W8A8-imatrix-MTP",
+    "revision": "d4680bb71d0369f3eacbeb2bf75cad9481125e7a",
+    "target": "/data/models/RukaRat-Qwen3.8-27B-INT8-W8A8-imatrix-MTP",
+    "download_status_at_report_time": "in_progress",
+    "accuracy_validated_by_publisher": false
+  },
+  "repository_validation": {
+    "python_compilation": "passed",
+    "bash_syntax": "passed",
+    "shellcheck": "passed",
+    "yaml_parsing": "passed",
+    "justfile_dry_runs": "passed",
+    "evaluation_image_pip_check": "passed",
+    "unit_tests": {
+      "passed": 15,
+      "failed": 0,
+      "environment": "qwen38-int8-lab/eval:0.1.0"
+    }
+  },
+  "qualified_scope": "local_non_thinking_text_inference_at_16k_only"
+}
