@@ -52,6 +52,40 @@ class Summary:
         }
 
 
+@dataclass(frozen=True)
+class MaximumLoglikelihoodRequest:
+    token_ids: tuple[int, ...]
+    context_tokens: int
+
+    @property
+    def token_count(self) -> int:
+        return len(self.token_ids)
+
+    def private_payload(self) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "request_type": "loglikelihood",
+            "token_ids": list(self.token_ids),
+            "context_tokens": self.context_tokens,
+            "token_count": self.token_count,
+            "token_ids_sha256": token_ids_hash(self.token_ids),
+        }
+
+    def public_identity(self) -> dict[str, Any]:
+        return {
+            "request_type": "loglikelihood",
+            "token_count": self.token_count,
+            "token_ids_sha256": token_ids_hash(self.token_ids),
+        }
+
+
+def token_ids_hash(token_ids: tuple[int, ...] | list[int]) -> str:
+    digest = hashlib.sha256()
+    for token_id in token_ids:
+        digest.update(int(token_id).to_bytes(4, "big", signed=False))
+    return digest.hexdigest()
+
+
 def apply_chat(
     tokenizer: Any,
     messages: list[dict[str, str]],
@@ -66,23 +100,47 @@ def apply_chat(
     )
 
 
-def encode_request(tokenizer: Any, request: Any) -> tuple[str, list[int], int, str]:
+def encode_loglikelihood_pair(
+    tokenizer: Any, context: str, continuation: str
+) -> tuple[str, list[int], int]:
+    if not context:
+        raise ValueError("suite loglikelihood request unexpectedly has an empty context")
+    trailing_spaces = len(context) - len(context.rstrip())
+    if trailing_spaces:
+        continuation = context[-trailing_spaces:] + continuation
+        context = context[:-trailing_spaces]
+    rendered = context + continuation
+    token_ids = tokenizer.encode(rendered, add_special_tokens=False)
+    context_ids = tokenizer.encode(context, add_special_tokens=False)
+    return rendered, token_ids, len(context_ids)
+
+
+def encode_request(
+    tokenizer: Any, request: Any
+) -> tuple[str, list[int], int, str, int | None]:
     request_type = request.request_type
     if request_type == "loglikelihood":
         context, continuation = request.arguments
-        ids = tokenizer.encode(context + continuation, add_special_tokens=False)
-        return context + continuation, ids, 0, request_type
+        rendered, ids, context_tokens = encode_loglikelihood_pair(
+            tokenizer, context, continuation
+        )
+        return rendered, ids, 0, request_type, context_tokens
     if request_type == "generate_until":
         context, generation = request.arguments
         ids = tokenizer.encode(context, add_special_tokens=False)
         reserve = int(generation.get("max_gen_toks", 256))
-        return context, ids, reserve, request_type
+        return context, ids, reserve, request_type, None
     raise ValueError(f"unexpected request type: {request_type}")
 
 
 def build_for(
     tokenizer: Any, task_config: dict[str, Any], context_length: int
-) -> tuple[Summary, dict[str, dict[str, int]], dict[str, int]]:
+) -> tuple[
+    Summary,
+    dict[str, dict[str, int]],
+    dict[str, int],
+    MaximumLoglikelihoodRequest,
+]:
     from lm_eval.tasks import TaskManager
 
     random.seed(42)
@@ -91,6 +149,7 @@ def build_for(
     per_task: dict[str, dict[str, int]] = {}
     manager = TaskManager()
     group_counts = {}
+    maximum_loglikelihood: MaximumLoglikelihoodRequest | None = None
     for group_name, group_config in task_config.items():
         loaded = manager.load([group_config["harness_task"]])
         group_count = 0
@@ -113,7 +172,9 @@ def build_for(
             documents = len(task.eval_docs)
             group_count += documents
             for request in task.instances:
-                rendered, ids, reserve, request_type = encode_request(tokenizer, request)
+                rendered, ids, reserve, request_type, context_tokens = encode_request(
+                    tokenizer, request
+                )
                 total = len(ids) + reserve
                 runtime_limit = (
                     context_length - 1
@@ -126,6 +187,14 @@ def build_for(
                         f"doc_id={request.doc_id} total={total} limit={runtime_limit}"
                     )
                 summary.add(task_name, request_type, rendered, ids, reserve)
+                if request_type == "loglikelihood" and (
+                    maximum_loglikelihood is None
+                    or len(ids) > maximum_loglikelihood.token_count
+                ):
+                    assert context_tokens is not None
+                    maximum_loglikelihood = MaximumLoglikelihoodRequest(
+                        tuple(ids), context_tokens
+                    )
                 maximum = max(maximum, total)
             per_task[task_name] = {"documents": documents, "maximum_tokens": maximum}
         expected = int(group_config["expected_eval_documents"])
@@ -135,7 +204,9 @@ def build_for(
                 f"expected {expected}, got {group_count}"
             )
         group_counts[group_name] = group_count
-    return summary, per_task, group_counts
+    if maximum_loglikelihood is None:
+        raise RuntimeError("suite contains no loglikelihood request")
+    return summary, per_task, group_counts, maximum_loglikelihood
 
 
 def tokenizer_identity(tokenizer: Any) -> dict[str, Any]:
@@ -157,6 +228,7 @@ def main() -> None:
     parser.add_argument("--candidate", required=True)
     parser.add_argument("--source", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--maximum-request-output")
     args = parser.parse_args()
     config = load_config()
     install(dataset_pins(config), offline=True)
@@ -183,18 +255,27 @@ def main() -> None:
         )
 
     context_length = int(config["protocol"]["context_length"])
-    candidate_summary, candidate_tasks, candidate_groups = build_for(
+    candidate_summary, candidate_tasks, candidate_groups, candidate_maximum = build_for(
         candidate, config["tasks"], context_length
     )
-    source_summary, source_tasks, source_groups = build_for(
+    source_summary, source_tasks, source_groups, source_maximum = build_for(
         source, config["tasks"], context_length
     )
     if (
         candidate_summary.as_dict() != source_summary.as_dict()
         or candidate_tasks != source_tasks
         or candidate_groups != source_groups
+        or candidate_maximum != source_maximum
     ):
         raise RuntimeError("candidate and source rendered requests/token IDs differ")
+    expected_maximum = int(config["runtime_gate"]["maximum_request_tokens"])
+    if candidate_maximum.token_count != expected_maximum:
+        raise RuntimeError(
+            "maximum loglikelihood request differs: "
+            f"expected {expected_maximum}, got {candidate_maximum.token_count}"
+        )
+    if candidate_maximum.token_count != candidate_summary.maximum_tokens:
+        raise RuntimeError("suite maximum is not the selected loglikelihood request")
     payload = {
         "schema_version": 1,
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -203,10 +284,13 @@ def main() -> None:
         "runtime_truncation_allowed": False,
         "tokenizer_identity": candidate_identity,
         "requests": candidate_summary.as_dict(),
+        "runtime_gate_request": candidate_maximum.public_identity(),
         "tasks": candidate_tasks,
         "groups": candidate_groups,
     }
     atomic_json(args.output, payload)
+    if args.maximum_request_output:
+        atomic_json(args.maximum_request_output, candidate_maximum.private_payload())
 
 
 if __name__ == "__main__":

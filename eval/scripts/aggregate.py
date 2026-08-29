@@ -101,6 +101,17 @@ def stratified_bootstrap(
 
 
 def aggregate(run_root: Path, config: dict[str, Any]) -> dict[str, Any]:
+    def optional_json(name: str) -> Any:
+        path = run_root / name
+        if not path.exists():
+            return None
+        with path.open(encoding="utf-8") as handle:
+            return json.load(handle)
+
+    git_identity = optional_json("git-identity.json")
+    evaluation_scope = (git_identity or {}).get("evaluation_scope", "paired")
+    if evaluation_scope not in {"paired", "candidate-only"}:
+        raise ValueError(f"unexpected evaluation scope: {evaluation_scope}")
     task_results: dict[str, Any] = {}
     paired: dict[str, Any] = {}
     missing_candidate = []
@@ -146,6 +157,8 @@ def aggregate(run_root: Path, config: dict[str, Any]) -> dict[str, Any]:
     macro_delta = None
     if missing_candidate:
         blocker = "missing candidate groups: " + ", ".join(missing_candidate)
+    elif evaluation_scope == "candidate-only":
+        decision = "candidate_scores_only_no_retention_or_deployment_recommendation"
     elif missing_bf16:
         blocker = "BF16 comparison incomplete: " + ", ".join(missing_bf16)
         decision = "candidate_scores_only_no_retention_or_deployment_recommendation"
@@ -158,20 +171,14 @@ def aggregate(run_root: Path, config: dict[str, Any]) -> dict[str, Any]:
         )
         decision = "retention_accepted" if macro_ok and individual_ok else "retention_rejected"
 
-    def optional_json(name: str) -> Any:
-        path = run_root / name
-        if not path.exists():
-            return None
-        with path.open(encoding="utf-8") as handle:
-            return json.load(handle)
-
     return {
         "schema_version": 1,
         "run_id": run_root.name,
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "scope": config["scope"],
+        "evaluation_scope": evaluation_scope,
         "harness": config["harness"],
-        "git": optional_json("git-identity.json"),
+        "git": git_identity,
         "image": optional_json("image-identity.json"),
         "packages": optional_json("package-identity.json"),
         "models": {
@@ -181,6 +188,7 @@ def aggregate(run_root: Path, config: dict[str, Any]) -> dict[str, Any]:
         "datasets": optional_json("dataset-preflight.json"),
         "request_preflight": optional_json("request-preflight.json"),
         "protocol": config["protocol"],
+        "runtime": optional_json("runtime-identity.json"),
         "tasks": task_results,
         "paired_retention": {
             "groups": paired,
@@ -204,6 +212,15 @@ def markdown(payload: dict[str, Any]) -> str:
     ]
     if payload["blocker"]:
         lines.append(f"Blocker: {payload['blocker']}.")
+    runtime = payload.get("runtime")
+    if runtime:
+        configured = runtime["configured"]
+        lines += [
+            "",
+            "## W8A8 runtime",
+            "",
+            f"Text-only loading: `{str(configured['language_model_only']).lower()}`; chunked prefill: `{str(configured['enable_chunked_prefill']).lower()}` with `{configured['max_num_batched_tokens']:,}` batched tokens; explicit KV allocation: `{configured['kv_cache_memory_bytes']:,}` bytes per GPU; observed KV capacity: `{runtime['observed_kv_capacity_tokens']:,}` tokens.",
+        ]
     lines += ["", "## Headline metrics", "", "| Group | Metric | W8A8 | BF16 | Delta |", "| --- | --- | ---: | ---: | ---: |"]
     for name, result in payload["tasks"].items():
         bf16 = "—" if "bf16" not in result else f"{result['bf16']:.6f}"

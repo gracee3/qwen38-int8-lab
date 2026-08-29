@@ -12,6 +12,11 @@ models:
     container_path: /models/w8a8
     max_batch_size: 1
     cpu_offload_gb: 0
+    runtime:
+      language_model_only: true
+      enable_chunked_prefill: true
+      max_num_batched_tokens: 1024
+      kv_cache_memory_bytes: 805306368
   bf16:
     host_path: /home/emmy/workspace/qwen3.8-27b-download/model
     container_path: /models/bf16
@@ -117,7 +122,6 @@ tasks:
 protocol:
   context_length: 16384
   tensor_parallel_size: 2
-  gpu_memory_utilization: 0.88
   kv_cache_dtype: bfloat16
   dtype: bfloat16
   seed: 42
@@ -128,9 +132,11 @@ protocol:
   fewshot_as_multiturn: true
   enforce_eager: true
   enable_prefix_caching: false
-  enable_chunked_prefill: false
   speculative_decoding: false
   flashinfer_sampler: false
+runtime_gate:
+  maximum_request_tokens: 12314
+  minimum_kv_capacity_tokens: 16384
 acceptance:
   bootstrap_replicates: 10000
   bootstrap_seed: 42

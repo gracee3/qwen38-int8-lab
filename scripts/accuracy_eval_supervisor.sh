@@ -233,8 +233,9 @@ prefetch_and_validate() {
     host_preflight
     docker run "${container_common[@]}" --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1 \
         --entrypoint python "${EVAL_IMAGE}" /app/eval/scripts/request_preflight.py \
-        --candidate /models/w8a8 --source /models/bf16 --output /run/request-preflight.json
-    chmod 600 "${RUN_ROOT}/request-preflight.json"
+        --candidate /models/w8a8 --source /models/bf16 --output /run/request-preflight.json \
+        --maximum-request-output /run/maximum-loglikelihood-request.json
+    chmod 600 "${RUN_ROOT}/request-preflight.json" "${RUN_ROOT}/maximum-loglikelihood-request.json"
 }
 
 process_memory_kib() {
@@ -253,40 +254,26 @@ process_memory_kib() {
     printf '%s %s\n' "${rss}" "${swap}"
 }
 
-run_eval_stage() {
-    local model=$1 stage_name=$2 tasks=$3 limit=${4:-}
-    local model_path max_batch cpu_offload temporary final log docker_pid status root_pid result_file
+prepare_stage() {
+    local stage_name=$1 subdirectory=${2:-}
+    local temporary=${RUN_ROOT}/stages/.${stage_name}.tmp final=${RUN_ROOT}/stages/${stage_name}
+    [[ ! -e ${final} && ! -e ${temporary} ]] || { FAILURE_REASON=stage_evidence_exists; return 1; }
+    install -d -m 700 "${temporary}"
+    [[ -z ${subdirectory} ]] || install -d -m 700 "${temporary}/${subdirectory}"
+}
+
+run_guarded_command() {
+    local model=$1 stage_name=$2
+    shift 2
+    local temporary=${RUN_ROOT}/stages/.${stage_name}.tmp log docker_pid status root_pid scan_reason scan_status
     local swap_free_start swap_free mem swap_growth breach=0 trigger='' gpu0 gpu1 disk rss proc_swap
     local psi_some psi_full pswpin pswpout
+    local observed_gpu0=0 observed_gpu1=0
+    local -a command=("$@")
     CURRENT_STAGE=${stage_name}
     host_preflight
-    final=${RUN_ROOT}/stages/${stage_name}
-    temporary=${RUN_ROOT}/stages/.${stage_name}.tmp
-    [[ ! -e ${final} && ! -e ${temporary} ]] || { FAILURE_REASON=stage_evidence_exists; return 1; }
-    install -d -m 700 "${temporary}/results"
     log=${temporary}/harness.log
-    if [[ ${model} == w8a8 ]]; then
-        model_path=/models/w8a8; max_batch=1; cpu_offload=0
-    else
-        model_path=/models/bf16; max_batch=1; cpu_offload=8
-    fi
     CURRENT_CONTAINER="qwen38-eval-${RUN_ID}-${stage_name}"
-    model_args="pretrained=${model_path},dtype=bfloat16,tensor_parallel_size=2,max_model_len=${CONTEXT_LENGTH},gpu_memory_utilization=0.88,kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,enable_chunked_prefill=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=${cpu_offload}"
-    command=(
-        docker run "${container_common[@]}" --name "${CURRENT_CONTAINER}"
-        --user 0:0
-        --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1
-        --env VLLM_USE_FLASHINFER_SAMPLER=0 --env VLLM_CACHE_ROOT=/run/cache/vllm
-        --env EVAL_OUTPUT_PATH="/run/stages/.${stage_name}.tmp"
-        --env EVAL_OUTPUT_UID="$(id -u)" --env EVAL_OUTPUT_GID="$(id -g)"
-        --entrypoint /bin/bash "${EVAL_IMAGE}" /app/eval/scripts/container_eval.sh
-        python /app/eval/scripts/run_harness.py run
-        --model vllm --model_args "${model_args}" --tasks "${tasks}"
-        --batch_size auto --max_batch_size "${max_batch}" --seed 42
-        --apply_chat_template --fewshot_as_multiturn --log_samples
-        --output_path "/run/stages/.${stage_name}.tmp/results"
-    )
-    [[ -z ${limit} ]] || command+=(--limit "${limit}")
     "${command[@]}" >"${log}" 2>&1 &
     docker_pid=$!
     swap_free_start=$(awk '/^SwapFree:/ {print $2}' /proc/meminfo)
@@ -334,6 +321,21 @@ run_eval_stage() {
     set -e
     CURRENT_CONTAINER=
     [[ -z ${trigger} ]] || return 1
+    set +e
+    scan_reason=$(python3 "${REPO}/eval/scripts/runtime_log_check.py" --log "${log}" --failure-only 2>/dev/null)
+    scan_status=$?
+    set -e
+    if (( scan_status != 0 )); then
+        case ${scan_reason} in
+            allocator_oom_warning_detected|runtime_exception_detected|runtime_truncation_detected)
+                FAILURE_REASON=${scan_reason}
+                ;;
+            *)
+                FAILURE_REASON=runtime_log_failure_scan_failed
+                ;;
+        esac
+        return 1
+    fi
     (( status == 0 )) || { FAILURE_REASON="harness_stage_failed_${stage_name}_status_${status}"; return 1; }
     [[ ${observed_gpu0} == 1 && ${observed_gpu1} == 1 ]] || { FAILURE_REASON=both_gpus_not_observed; return 1; }
     if [[ ${model} == w8a8 ]]; then
@@ -343,9 +345,102 @@ run_eval_stage() {
     else
         grep -Eiq 'cpu offload|CPUOffloading|offload' "${log}" || { FAILURE_REASON=bf16_cpu_offload_not_observed; return 1; }
     fi
-    if grep -Eiq 'exceeds model.s max length|left truncated|truncating to last|truncating context' "${log}"; then
-        FAILURE_REASON=runtime_truncation_detected; return 1
+}
+
+finish_stage() {
+    local model=$1 stage_name=$2
+    local temporary=${RUN_ROOT}/stages/.${stage_name}.tmp final=${RUN_ROOT}/stages/${stage_name}
+    for _ in $(seq 1 30); do
+        [[ -z $(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits | sed '/^[[:space:]]*$/d') ]] && break
+        sleep 1
+    done
+    [[ -z $(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits | sed '/^[[:space:]]*$/d') ]] || {
+        FAILURE_REASON=gpu_process_remained_after_stage; return 1;
+    }
+    chmod -R u=rwX,go= "${temporary}"
+    mv "${temporary}" "${final}"
+    printf 'stage=%s model=%s status=passed evidence=%s\n' "${stage_name}" "${model}" "${final}"
+}
+
+run_runtime_gate() {
+    local stage_name=runtime-loglikelihood-gate
+    local temporary=${RUN_ROOT}/stages/.${stage_name}.tmp
+    local -a command
+    prepare_stage "${stage_name}"
+    command=(
+        docker run "${container_common[@]}" --name "qwen38-eval-${RUN_ID}-${stage_name}"
+        --user 0:0
+        --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1
+        --env VLLM_USE_FLASHINFER_SAMPLER=0 --env VLLM_CACHE_ROOT=/run/cache/vllm
+        --env EVAL_OUTPUT_PATH="/run/stages/.${stage_name}.tmp"
+        --env EVAL_OUTPUT_UID="$(id -u)" --env EVAL_OUTPUT_GID="$(id -g)"
+        --entrypoint /bin/bash "${EVAL_IMAGE}" /app/eval/scripts/container_eval.sh
+        python /app/eval/scripts/runtime_loglikelihood_gate.py
+        --request /run/maximum-loglikelihood-request.json --model /models/w8a8
+        --output "/run/stages/.${stage_name}.tmp/execution.json"
+    )
+    run_guarded_command w8a8 "${stage_name}" "${command[@]}"
+    if ! EVAL_SUITE_CONFIG="${SUITE_CONFIG}" python3 "${REPO}/eval/scripts/runtime_log_check.py" \
+        --log "${temporary}/harness.log" --execution "${temporary}/execution.json" \
+        --output "${temporary}/runtime-gate.json"; then
+        FAILURE_REASON=runtime_loglikelihood_gate_validation_failed
+        return 1
     fi
+    rm "${temporary}/execution.json"
+    finish_stage w8a8 "${stage_name}"
+    python3 - "${SUITE_CONFIG}" "${RUN_ROOT}/stages/${stage_name}/runtime-gate.json" \
+        "${RUN_ROOT}/runtime-identity.json" <<'PY'
+import json, os, sys, yaml
+config_path, gate_path, output = sys.argv[1:]
+with open(config_path, encoding="utf-8") as f: config=yaml.safe_load(f)
+with open(gate_path, encoding="utf-8") as f: gate=json.load(f)
+payload={
+    "configured": {
+        **config["models"]["w8a8"]["runtime"],
+        "cpu_offload_gb": config["models"]["w8a8"]["cpu_offload_gb"],
+    },
+    "observed_kv_capacity_tokens": gate["observed_kv_capacity_tokens"],
+    "runtime_gate": {
+        "status": gate["status"],
+        "maximum_request_tokens": gate["maximum_request_tokens"],
+        "prompt_logprobs_complete": gate["prompt_logprobs_complete"],
+        "native_cutlass_w8a8_dispatch": gate["native_cutlass_w8a8_dispatch"],
+    },
+}
+with open(output,"x",encoding="utf-8") as f: json.dump(payload,f,indent=2,sort_keys=True); f.write("\n")
+os.chmod(output,0o600)
+PY
+}
+
+run_eval_stage() {
+    local model=$1 stage_name=$2 tasks=$3 limit=${4:-}
+    local model_path max_batch model_args temporary result_file
+    local -a command
+    prepare_stage "${stage_name}" results
+    temporary=${RUN_ROOT}/stages/.${stage_name}.tmp
+    if [[ ${model} == w8a8 ]]; then
+        model_path=/models/w8a8; max_batch=1
+        model_args="pretrained=${model_path},dtype=bfloat16,tensor_parallel_size=2,max_model_len=${CONTEXT_LENGTH},kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=0,language_model_only=True,enable_chunked_prefill=True,max_num_batched_tokens=1024,kv_cache_memory_bytes=805306368"
+    else
+        model_path=/models/bf16; max_batch=1
+        model_args="pretrained=${model_path},dtype=bfloat16,tensor_parallel_size=2,max_model_len=${CONTEXT_LENGTH},gpu_memory_utilization=0.88,kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,enable_chunked_prefill=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=8"
+    fi
+    command=(
+        docker run "${container_common[@]}" --name "qwen38-eval-${RUN_ID}-${stage_name}"
+        --user 0:0
+        --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1
+        --env VLLM_USE_FLASHINFER_SAMPLER=0 --env VLLM_CACHE_ROOT=/run/cache/vllm
+        --env EVAL_OUTPUT_PATH="/run/stages/.${stage_name}.tmp"
+        --env EVAL_OUTPUT_UID="$(id -u)" --env EVAL_OUTPUT_GID="$(id -g)"
+        --entrypoint /bin/bash "${EVAL_IMAGE}" /app/eval/scripts/container_eval.sh
+        python /app/eval/scripts/run_harness.py run
+        --model vllm --model_args "${model_args}" --tasks "${tasks}"
+        --batch_size auto --max_batch_size "${max_batch}" --seed 42
+        --apply_chat_template --fewshot_as_multiturn --log_samples
+        --output_path "/run/stages/.${stage_name}.tmp/results"
+    )
+    [[ -z ${limit} ]] || command+=(--limit "${limit}")
+    run_guarded_command "${model}" "${stage_name}" "${command[@]}"
     [[ $(find "${temporary}/results" -type f -name 'results_*.json' | wc -l) -eq 1 ]] || {
         FAILURE_REASON=missing_or_duplicate_result_json; return 1;
     }
@@ -367,16 +462,7 @@ matches=[value for key,value in values.items() if key == task["headline_metric"]
 if len(matches) != 1 or not math.isfinite(float(matches[0])):
     raise SystemExit(f"missing, duplicate, or non-finite headline metric: {task['headline_metric']}")
 PY
-    chmod -R u=rwX,go= "${temporary}"
-    mv "${temporary}" "${final}"
-    for _ in $(seq 1 30); do
-        [[ -z $(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits | sed '/^[[:space:]]*$/d') ]] && break
-        sleep 1
-    done
-    [[ -z $(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits | sed '/^[[:space:]]*$/d') ]] || {
-        FAILURE_REASON=gpu_process_remained_after_stage; return 1;
-    }
-    printf 'stage=%s model=%s status=passed evidence=%s\n' "${stage_name}" "${model}" "${final}"
+    finish_stage "${model}" "${stage_name}"
 }
 
 finalize_telemetry() {
@@ -415,6 +501,7 @@ host_preflight
 write_identities
 write_model_manifests before
 prefetch_and_validate
+run_runtime_gate
 run_eval_stage w8a8 smoke leaderboard 2
 if [[ ${EVAL_SCOPE} == paired ]]; then
     run_eval_stage bf16 smoke-bf16 leaderboard 2
