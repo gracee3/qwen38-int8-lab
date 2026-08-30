@@ -76,6 +76,8 @@ just validate
 just serve       # 64K, CUDA-graph server on loopback port 8000
 just smoke       # from a second shell
 just bench
+just serve-webui # text chat with request-selectable Qwen thinking
+just webui-up    # lightweight browser UI on 127.0.0.1:3030
 
 # Standardized non-thinking text accuracy (lm-eval v0.4.12)
 just build-eval
@@ -151,3 +153,9 @@ The immediate next milestone is the complete candidate-only standardized accurac
 The scored group order is MMLU-Pro from zero, followed by BBH, GPQA, MATH Level 5, IFEval, and MuSR. Each group is preserved atomically before the next begins. Do not report the old partial MMLU-Pro samples or combine them with the restart. The completed candidate-only aggregate may report W8A8 scores, but it cannot support a BF16-retention or deployment recommendation because the BF16 comparison is intentionally omitted.
 
 After the standardized run, the next practical gates are pinned code-generation canaries, 64K context-retrieval quality, and small repository-agent tasks. Throughput and serving capacity are already measured; these follow-ups determine whether the model is useful and reliable at the advertised window.
+
+## Browser chat
+
+The repository includes a pinned, CPU-only Open WebUI deployment for lightweight general chat without an agent/tool envelope. It connects directly to the loopback vLLM API, persists chats in a named Docker volume, binds the browser UI to `127.0.0.1:3030` (port 3000 is reserved by host Grafana), and disables Ollama, memory, web search, code execution, and API passthrough by default. Use an SSH tunnel to reach it remotely.
+
+`just serve-webui` retains the measured 64K text profile and adds Qwen reasoning parsing so per-model presets can select thinking on or off; thinking remains off by default. `just serve-webui-vision` is a separate, explicitly experimental 32K profile that loads the preserved vision tower for pasted images. The vision profile is not part of the measured text-throughput claim and must pass memory, image, context, and performance gates before promotion. Setup, preset parameters, security boundaries, and lifecycle commands are documented in `webui/README.md`.
