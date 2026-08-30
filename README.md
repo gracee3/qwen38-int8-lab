@@ -136,10 +136,18 @@ As of 2026-08-30:
 - Both pinned Docker images build and see both SM86 GPUs. The exact resolved environments are checked in.
 - The sequential synthetic gate passes calibration, GPTQ W8A8 compression, Safetensors serialization, index inspection, and quantization-metadata validation. It recorded about 2.0 GiB peak process RSS and 364/266 MiB peak GPU memory.
 - The guarded 32-sample scaling gate and 512-sample quality calibration passed; the self-contained candidate is at `/data/models/Qwen3.8-27B-W8A8-INT8`.
-- The standardized accuracy infrastructure is published in draft PR #10. GPQA access is accepted and all six pinned datasets prefetch and validate offline. Exact-commit run `20260825T031746Z` showed that one zero-shot GPQA Extended document renders four 12,314-token choice requests, exceeding the former 8,192-token protocol. A complete audit found 12,314 tokens is the suite maximum, so the reviewed follow-up protocol uses a uniform 16,384-token context without truncation.
+- The standardized accuracy infrastructure is implemented and validated. GPQA access is accepted and all six pinned datasets prefetch and validate offline. Exact-commit run `20260825T031746Z` showed that one zero-shot GPQA Extended document renders four 12,314-token choice requests, exceeding the former 8,192-token protocol. A complete audit found 12,314 tokens is the suite maximum, so the reviewed follow-up protocol uses a uniform 16,384-token context without truncation.
 - A former full-group attempt exhausted GPU memory while producing prompt log-probabilities. The candidate-only retry therefore uses text-only loading, chunked prefill, and an explicit bounded KV allocation, with the suite maximum executed as a mandatory runtime gate before smoke.
 - The revised preflight, 12,314-token runtime log-likelihood gate, and limited W8A8 smoke passed. MMLU-Pro was manually paused at 5,811/113,990 requests to prioritize interactive inference; there is no reportable accuracy score, and later resumption restarts that group from zero.
 - A loopback-only vLLM server is running the candidate with the measured 64K CUDA-graph profile. Native Rust Goose and standalone Qwen Code both completed real local tool calls. Qwen Code fits the larger window but spends roughly 10K tokens on its fresh built-in prompt/tool envelope; Goose remains the lower-overhead interactive option.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
 See `reports/evaluation-and-agent-status-2026-08-29.md` for the complete attempt ledger, dataset map, agent results, public W8A8 comparison, and next evaluation ladder.
+
+## Next steps
+
+The immediate next milestone is the complete candidate-only standardized accuracy run. Stop the interactive vLLM server so the evaluator has exclusive use of both GPUs, use the exact merged `main` commit, and launch `just eval-candidate-only <exact-main-commit>` in its labeled tmux session. The supervisor reruns preflight, the private 12,314-token maximum-request gate, and smoke before scoring.
+
+The scored group order is MMLU-Pro from zero, followed by BBH, GPQA, MATH Level 5, IFEval, and MuSR. Each group is preserved atomically before the next begins. Do not report the old partial MMLU-Pro samples or combine them with the restart. The completed candidate-only aggregate may report W8A8 scores, but it cannot support a BF16-retention or deployment recommendation because the BF16 comparison is intentionally omitted.
+
+After the standardized run, the next practical gates are pinned code-generation canaries, 64K context-retrieval quality, and small repository-agent tasks. Throughput and serving capacity are already measured; these follow-ups determine whether the model is useful and reliable at the advertised window.
