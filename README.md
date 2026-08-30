@@ -93,9 +93,26 @@ Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MO
 
 Real-checkpoint serialization uses the configured 1 GB shard limit, hidden incomplete staging, and an atomic final rename. Before that rename, it restores 15 MTP tensors and copies both processor JSON files byte-for-byte from the source after validating that they are in-tree JSON objects. Strict validation requires complete index/shard integrity, W8A8 metadata, exactly 256 quantized targets, 15 MTP tensors, and both processor files. Run metadata includes process RSS and `VmSwap`, host swap-I/O deltas, memory PSI totals, available RAM, swap growth, GPU memory, free disk, and any sustained safety-trigger reason. The interrupt thresholds remain 8 GiB available RAM or more than 4 GiB swap growth for 10 seconds.
 
-The default serving command is the measured interactive profile: TP2 across two RTX 3090s, a 65,536-token engineering window, an explicit 2.5 GiB BF16 KV allocation per GPU, CUDA graphs, text-only loading, non-thinking chat, prefix caching, 2,048-token chunked prefill, one concurrent sequence, native CUTLASS W8A8 kernels, and loopback-only authenticated HTTP. MTP speculation is disabled because the local checkpoint produced zero accepted draft tokens in the compatibility trial. `just smoke` sends the same non-thinking request twice and requires a deterministic response containing `391`.
+The default serving command is the measured interactive profile: TP2 across two RTX 3090s, a 65,536-token engineering window, an explicit 2.5 GiB BF16 KV allocation per GPU, CUDA graphs, text-only loading, non-thinking chat, prefix caching, 2,048-token chunked prefill, one concurrent sequence, native CUTLASS W8A8 kernels, and loopback-only authenticated HTTP. `just smoke` sends the same non-thinking request twice and requires a deterministic response containing `391`.
 
-`just bench` measures cold prefill, warm prefix-cache reuse, and steady-state decode separately. The reviewed dual-3090 result is 39.053 median decode tok/s over seven forced 256-token generations. Cold client-observed prefill medians range from 1,778.7 to 2,089.5 tok/s across approximately 1K, 8K, 32K, and 60K prompts. See `reports/inference-performance-2026-08-30.md` for definitions, dispersion, raw-evidence paths, and claim boundaries.
+### Measured inference performance
+
+The reviewed default-profile result is **39.053 median decode tok/s** across seven forced 256-token generations, with a very narrow 39.050–39.060 tok/s range. This is single-sequence HTTP inference on two 24 GiB RTX 3090s with vLLM 0.27.1, TP2, BF16 KV, and CUDA graphs.
+
+| Prompt target | Actual cold prompt | Cold approximate prefill | Cold median TTFT | Warm cached effective prefill | Warm median TTFT |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1,024 | 1,020–1,022 | 1,903.7 tok/s | 0.5368 s | 5,992.9 tok/s | 0.1700 s |
+| 8,192 | 8,187–8,191 | 2,089.5 tok/s | 3.9181 s | 30,954.0 tok/s | 0.2646 s |
+| 32,768 | 32,765–32,767 | 1,935.5 tok/s | 16.9289 s | 58,355.6 tok/s | 0.5615 s |
+| 60,000 | 59,997–60,000 | 1,778.7 tok/s | 33.7324 s | 91,461.5 tok/s | 0.6560 s |
+
+Each cold condition contains three requests with unique leading nonces, preventing prefix-cache reuse. Each warm condition contains one unrecorded cache-populating request followed by three identical recorded requests. Cold prefill is prompt tokens divided by client-observed TTFT and therefore includes HTTP, scheduler, and first-token overhead. Warm results measure effective application throughput from KV-cache reuse; the 91K figure is not fresh-compute prefill throughput.
+
+CUDA graphs produced the major decode improvement. In the earlier matched 1,153-input/128-output tuning probe, eager mode decoded at 10.688 tok/s and CUDA-graphs-only mode decoded at 39.124 tok/s: **3.66× throughput, or about a 266% increase**. The full suite above independently confirmed the final default at 39.053 tok/s over longer generations.
+
+MTP weights remain preserved in the checkpoint, but speculative MTP serving is **disabled**. The compatibility trial accepted 0 of 1,524 drafted tokens, so it provided no valid speculative-token benefit and is excluded from the defaults and headline claim. Thinking/reasoning is also **disabled** through the server's default chat-template arguments; the benchmark uses deterministic non-thinking completions. These choices avoid wasted draft/reasoning work and keep the measured profile focused on responsive coding-agent use.
+
+Run `just bench` to reproduce the cold, warm, and decode suite. Full methodology, dispersion, and evidence paths are in `reports/inference-performance-2026-08-30.md`; the complete raw run is `/data/qwen38-int8-lab/results/benchmark-suite-defaults-20260830T004833Z.json` on the measured host. The result does not establish concurrent-serving throughput, vision performance, standardized accuracy, or 64K context quality.
 
 For the complete guarded sequence, install a timestamped copy of `scripts/quality_gate_supervisor.sh` under `/data/qwen38-int8-lab`, set `EXPECTED_COMMIT` to the merged `main` commit, and launch it in a newly named tmux session. The supervisor performs fresh host/repository/storage gates before tiny, small, and quality calibration, changes swappiness only around each calibration child process group, restores it exactly, validates direct vLLM loading, and halts without retry on the first failure.
 
