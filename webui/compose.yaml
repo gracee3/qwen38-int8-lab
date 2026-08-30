@@ -1,0 +1,41 @@
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui@sha256:4d200cd5a44ac8bc88ed60bd45de5946898ffd5da50d2e42e0b59335bf6a025c
+    container_name: qwen38-open-webui
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      HOST: 127.0.0.1
+      PORT: 3030
+      WEBUI_URL: http://127.0.0.1:3030
+      CORS_ALLOW_ORIGIN: http://127.0.0.1:3030
+      USER_AGENT: qwen38-int8-lab-open-webui/0.11.1
+      WEBUI_AUTH: "true"
+      ENABLE_SIGNUP: "true"
+      ENABLE_OLLAMA_API: "false"
+      OPENAI_API_BASE_URLS: http://127.0.0.1:8000/v1
+      OPENAI_API_KEYS: ${VLLM_API_KEY:-local-qwen-only}
+      DEFAULT_MODELS: qwen38-w8a8
+      ENABLE_OPENAI_API_PASSTHROUGH: "false"
+      ENABLE_MEMORY: "false"
+      ENABLE_WEB_SEARCH: "false"
+      ENABLE_CODE_EXECUTION: "false"
+      ENABLE_CODE_INTERPRETER: "false"
+      ENABLE_ORJSON: "true"
+      DATABASE_POOL_SIZE: "8"
+      DATABASE_SQLITE_PRAGMA_CACHE_SIZE: "-2000"
+      DATABASE_SQLITE_PRAGMA_MMAP_SIZE: "0"
+      SCARF_NO_ANALYTICS: "true"
+      DO_NOT_TRACK: "true"
+      ANONYMIZED_TELEMETRY: "false"
+    volumes:
+      - qwen38_open_webui_data:/app/backend/data
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+
+volumes:
+  qwen38_open_webui_data:
+    name: qwen38_open_webui_data

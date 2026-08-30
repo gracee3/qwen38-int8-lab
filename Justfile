@@ -15,6 +15,8 @@ served_model := env_var_or_default("SERVED_MODEL", "qwen38-w8a8")
 api_key := env_var_or_default("VLLM_API_KEY", "local-qwen-only")
 inference_context := env_var_or_default("INFERENCE_CONTEXT", "65536")
 inference_kv_cache_bytes := env_var_or_default("INFERENCE_KV_CACHE_BYTES", "2684354560")
+reasoning_args := if env_var_or_default("ENABLE_REASONING_PARSER", "0") == "1" { "--reasoning-parser qwen3" } else { "" }
+modality_args := if env_var_or_default("ENABLE_VISION", "0") == "1" { "--limit-mm-per-prompt '{\"image\":4}'" } else { "--language-model-only" }
 
 default:
     @just --list
@@ -89,13 +91,31 @@ validate:
     docker run --rm --gpus all --ipc=host --entrypoint python --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -w /app "{{vllm_image}}" /app/quant/scripts/validate_quant.py /models/$(basename "{{output_model}}")
 
 serve:
-    mkdir -p "{{work_root}}/logs"; log="{{work_root}}/logs/vllm-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "vLLM log: $log"; docker run --rm --gpus all --ipc=host -p "127.0.0.1:{{port}}:8000" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e VLLM_CACHE_ROOT=/work/cache/vllm -e VLLM_USE_FLASHINFER_SAMPLER=0 "{{vllm_image}}" /models/$(basename "{{output_model}}") --served-model-name "{{served_model}}" --api-key "{{api_key}}" --tensor-parallel-size 2 --max-model-len "{{inference_context}}" --kv-cache-memory-bytes "{{inference_kv_cache_bytes}}" --kv-cache-dtype bfloat16 --cpu-offload-gb 0 --seed 42 --language-model-only --enable-prefix-caching --enable-chunked-prefill --max-num-batched-tokens 2048 --max-num-seqs 1 --enable-auto-tool-choice --tool-call-parser qwen3_xml --default-chat-template-kwargs '{"enable_thinking":false}' --generation-config vllm --no-enable-log-requests --disable-uvicorn-access-log 2>&1 | tee "$log"
+    mkdir -p "{{work_root}}/logs"; log="{{work_root}}/logs/vllm-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "vLLM log: $log"; docker run --rm --gpus all --ipc=host -p "127.0.0.1:{{port}}:8000" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e VLLM_CACHE_ROOT=/work/cache/vllm -e VLLM_USE_FLASHINFER_SAMPLER=0 "{{vllm_image}}" /models/$(basename "{{output_model}}") --served-model-name "{{served_model}}" --api-key "{{api_key}}" --tensor-parallel-size 2 --max-model-len "{{inference_context}}" --kv-cache-memory-bytes "{{inference_kv_cache_bytes}}" --kv-cache-dtype bfloat16 --cpu-offload-gb 0 --seed 42 {{modality_args}} {{reasoning_args}} --enable-prefix-caching --enable-chunked-prefill --max-num-batched-tokens 2048 --max-num-seqs 1 --enable-auto-tool-choice --tool-call-parser qwen3_xml --default-chat-template-kwargs '{"enable_thinking":false}' --generation-config vllm --no-enable-log-requests --disable-uvicorn-access-log 2>&1 | tee "$log"
+
+serve-webui:
+    ENABLE_REASONING_PARSER=1 just serve
+
+serve-webui-vision:
+    ENABLE_REASONING_PARSER=1 ENABLE_VISION=1 INFERENCE_CONTEXT=32768 INFERENCE_KV_CACHE_BYTES=1610612736 just serve
 
 smoke:
     python3 "{{repo_root}}/inference/scripts/smoke_test.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{served_model}}" --api-key "{{api_key}}" --output "{{work_root}}/results/inference-smoke-$(date -u +%Y%m%dT%H%M%SZ).json"
 
 bench:
     python3 "{{repo_root}}/inference/scripts/benchmark.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{served_model}}" --api-key "{{api_key}}" --output "{{work_root}}/results/benchmark-suite-$(date -u +%Y%m%dT%H%M%SZ).json"
+
+webui-up:
+    VLLM_API_KEY="{{api_key}}" docker compose -f "{{repo_root}}/webui/compose.yaml" up -d
+
+webui-down:
+    docker compose -f "{{repo_root}}/webui/compose.yaml" down
+
+webui-logs:
+    docker compose -f "{{repo_root}}/webui/compose.yaml" logs -f --tail 100
+
+webui-status:
+    docker compose -f "{{repo_root}}/webui/compose.yaml" ps
 
 logs:
     @find "{{work_root}}/logs" -maxdepth 1 -type f -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' | sort
