@@ -1,0 +1,61 @@
+{
+  "claim_scope": "single-sequence HTTP inference on the exact measured host and runtime profile",
+  "decode": {
+    "completion_tokens_per_run": 256,
+    "count": 7,
+    "maximum_tokens_per_second": 39.06037506275187,
+    "mean_tokens_per_second": 39.053701631526515,
+    "median_tokens_per_second": 39.053362494360826,
+    "minimum_tokens_per_second": 39.049655343192235,
+    "population_standard_deviation": 0.003231980993141069
+  },
+  "hardware": {
+    "driver": "610.43.02",
+    "gpu_count": 2,
+    "gpu_model": "NVIDIA GeForce RTX 3090",
+    "gpu_vram_mib_each": 24576
+  },
+  "measured_at": "2026-08-30T00:53:41.597706+00:00",
+  "prefill": [
+    {
+      "actual_cold_prompt_tokens": [1022, 1020, 1021],
+      "cold_median_approx_tokens_per_second": 1903.7390198414869,
+      "cold_median_ttft_seconds": 0.5368382899905555,
+      "target_prompt_tokens": 1024,
+      "warm_median_effective_tokens_per_second": 5992.8602044181525
+    },
+    {
+      "actual_cold_prompt_tokens": [8188, 8187, 8191],
+      "cold_median_approx_tokens_per_second": 2089.542024171795,
+      "cold_median_ttft_seconds": 3.9180834389990196,
+      "target_prompt_tokens": 8192,
+      "warm_median_effective_tokens_per_second": 30953.97181565098
+    },
+    {
+      "actual_cold_prompt_tokens": [32765, 32766, 32767],
+      "cold_median_approx_tokens_per_second": 1935.502678581758,
+      "cold_median_ttft_seconds": 16.92893549700966,
+      "target_prompt_tokens": 32768,
+      "warm_median_effective_tokens_per_second": 58355.56559438944
+    },
+    {
+      "actual_cold_prompt_tokens": [59997, 59999, 60000],
+      "cold_median_approx_tokens_per_second": 1778.6731329624113,
+      "cold_median_ttft_seconds": 33.732448580965865,
+      "target_prompt_tokens": 60000,
+      "warm_median_effective_tokens_per_second": 91461.4572743937
+    }
+  ],
+  "raw_evidence": "/data/qwen38-int8-lab/results/benchmark-suite-defaults-20260830T004833Z.json",
+  "runtime": {
+    "context_tokens": 65536,
+    "cuda_graphs": true,
+    "kv_cache_bytes_per_gpu": 2684354560,
+    "kv_cache_dtype": "bfloat16",
+    "model": "qwen38-w8a8",
+    "mtp": false,
+    "tensor_parallel_size": 2,
+    "vllm": "0.27.1"
+  },
+  "schema_version": 1
+}

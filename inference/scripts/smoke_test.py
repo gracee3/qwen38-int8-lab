@@ -12,9 +12,14 @@ from pathlib import Path
 from typing import Any
 
 
-def request_json(url: str, payload: dict[str, Any] | None = None, timeout: float = 180.0) -> dict[str, Any]:
+def request_json(
+    url: str, payload: dict[str, Any] | None = None, timeout: float = 180.0, api_key: str | None = None
+) -> dict[str, Any]:
     body = None if payload is None else json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    request = urllib.request.Request(url, data=body, headers=headers)
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.load(response)
 
@@ -25,6 +30,7 @@ def main() -> int:
     parser.add_argument("--model", default="qwen38-w8a8")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--timeout", type=float, default=180.0)
+    parser.add_argument("--api-key", help="Optional bearer token for the inference endpoint")
     args = parser.parse_args()
 
     started = time.monotonic()
@@ -35,7 +41,7 @@ def main() -> int:
         "coherence_reviewed": False,
     }
     try:
-        models = request_json(f"{args.base_url}/models", timeout=args.timeout)
+        models = request_json(f"{args.base_url}/models", timeout=args.timeout, api_key=args.api_key)
         available = [item["id"] for item in models.get("data", [])]
         if args.model not in available:
             raise RuntimeError(f"{args.model!r} not present in server model list: {available}")
@@ -50,8 +56,8 @@ def main() -> int:
             "max_tokens": 128,
             "chat_template_kwargs": {"enable_thinking": False},
         }
-        first = request_json(f"{args.base_url}/chat/completions", payload, args.timeout)
-        second = request_json(f"{args.base_url}/chat/completions", payload, args.timeout)
+        first = request_json(f"{args.base_url}/chat/completions", payload, args.timeout, args.api_key)
+        second = request_json(f"{args.base_url}/chat/completions", payload, args.timeout, args.api_key)
         first_text = first["choices"][0]["message"]["content"]
         second_text = second["choices"][0]["message"]["content"]
         if not first_text.strip():

@@ -73,7 +73,7 @@ just quant        # authorized 512-sample x 2,048-token quality candidate
 
 just build-vllm
 just validate
-just serve       # foreground server on port 8000
+just serve       # 64K, CUDA-graph server on loopback port 8000
 just smoke       # from a second shell
 just bench
 
@@ -85,7 +85,7 @@ just eval-standardized <exact-pushed-commit>
 just eval-candidate-only <exact-pushed-commit>
 ```
 
-Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`.
+Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`. Serving also accepts `VLLM_API_KEY`, `INFERENCE_CONTEXT`, and `INFERENCE_KV_CACHE_BYTES` overrides.
 
 `just quant-smoke` is designed to quantize a tiny synthetic Qwen3.5/3.8-shaped model with the real package APIs and serialization path. It is not a partially quantized 27B checkpoint. Experimental real-source profiles require an explicit destination below `/work/scratch` and are marked non-production. The guarded `just quant` command is reserved for the measured quality run and refuses to overwrite an existing output. The external dataset is pinned to commit `8049631c405ae6576f93f445c6b8166f76f5505a`; run metadata records both dataset fingerprints, seed, count, and aggregate token lengths, never sample text.
 
@@ -93,7 +93,9 @@ Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MO
 
 Real-checkpoint serialization uses the configured 1 GB shard limit, hidden incomplete staging, and an atomic final rename. Before that rename, it restores 15 MTP tensors and copies both processor JSON files byte-for-byte from the source after validating that they are in-tree JSON objects. Strict validation requires complete index/shard integrity, W8A8 metadata, exactly 256 quantized targets, 15 MTP tensors, and both processor files. Run metadata includes process RSS and `VmSwap`, host swap-I/O deltas, memory PSI totals, available RAM, swap growth, GPU memory, free disk, and any sustained safety-trigger reason. The interrupt thresholds remain 8 GiB available RAM or more than 4 GiB swap growth for 10 seconds.
 
-The supported serving command uses TP2, a 2,048-token context, 0.88 GPU-memory utilization, BF16 KV cache, seed 42, eager mode, and disables prefix caching, chunked prefill, speculation, and the FlashInfer sampler. `just smoke` sends the same non-thinking request twice with a 128-token allowance and requires a deterministic response containing `391`.
+The default serving command is the measured interactive profile: TP2 across two RTX 3090s, a 65,536-token engineering window, an explicit 2.5 GiB BF16 KV allocation per GPU, CUDA graphs, text-only loading, non-thinking chat, prefix caching, 2,048-token chunked prefill, one concurrent sequence, native CUTLASS W8A8 kernels, and loopback-only authenticated HTTP. MTP speculation is disabled because the local checkpoint produced zero accepted draft tokens in the compatibility trial. `just smoke` sends the same non-thinking request twice and requires a deterministic response containing `391`.
+
+`just bench` measures cold prefill, warm prefix-cache reuse, and steady-state decode separately. The reviewed dual-3090 result is 39.053 median decode tok/s over seven forced 256-token generations. Cold client-observed prefill medians range from 1,778.7 to 2,089.5 tok/s across approximately 1K, 8K, 32K, and 60K prompts. See `reports/inference-performance-2026-08-30.md` for definitions, dispersion, raw-evidence paths, and claim boundaries.
 
 For the complete guarded sequence, install a timestamped copy of `scripts/quality_gate_supervisor.sh` under `/data/qwen38-int8-lab`, set `EXPECTED_COMMIT` to the merged `main` commit, and launch it in a newly named tmux session. The supervisor performs fresh host/repository/storage gates before tiny, small, and quality calibration, changes swappiness only around each calibration child process group, restores it exactly, validates direct vLLM loading, and halts without retry on the first failure.
 
@@ -105,11 +107,11 @@ The standardized accuracy workflow is defined in `eval/config/leaderboard-v2.yam
 
 Docker bases are pinned by digest, direct requirements are version-pinned, and successfully resolved transitive environments are captured in lock files. Run metadata records the Git commit, package versions, recipe, source invariants, timestamps, and observed process/GPU peaks. Dataset caches and vLLM compilation caches remain under `/work/cache` for fast iteration without redownloading.
 
-Benchmark scripts write JSON under `/data/qwen38-int8-lab/results`; only reviewed, compact results belong in Git. No benchmark numbers are pre-populated.
+Benchmark scripts write full JSON under `/data/qwen38-int8-lab/results`; only reviewed, compact summaries belong in Git.
 
 ## Current status
 
-As of 2026-08-29:
+As of 2026-08-30:
 
 - The local source is complete: 18 Safetensors shards, 1,199 tensors, about 51.75 GiB of shard files.
 - Metadata identifies `Qwen3_5ForConditionalGeneration`: 64 text layers (48 recurrent/linear-attention and 16 full-attention), a 27-layer vision tower, and one MTP layer.
@@ -120,7 +122,7 @@ As of 2026-08-29:
 - The standardized accuracy infrastructure is published in draft PR #10. GPQA access is accepted and all six pinned datasets prefetch and validate offline. Exact-commit run `20260825T031746Z` showed that one zero-shot GPQA Extended document renders four 12,314-token choice requests, exceeding the former 8,192-token protocol. A complete audit found 12,314 tokens is the suite maximum, so the reviewed follow-up protocol uses a uniform 16,384-token context without truncation.
 - A former full-group attempt exhausted GPU memory while producing prompt log-probabilities. The candidate-only retry therefore uses text-only loading, chunked prefill, and an explicit bounded KV allocation, with the suite maximum executed as a mandatory runtime gate before smoke.
 - The revised preflight, 12,314-token runtime log-likelihood gate, and limited W8A8 smoke passed. MMLU-Pro was manually paused at 5,811/113,990 requests to prioritize interactive inference; there is no reportable accuracy score, and later resumption restarts that group from zero.
-- A loopback-only vLLM server is running the candidate at 16K. Native Rust Goose and standalone Qwen Code both completed real local tool calls; Goose is the lower-overhead interactive default. Direct Codex Responses connectivity works, but the current Codex prompt/tool envelope exceeds the 16K runtime window.
+- A loopback-only vLLM server is running the candidate with the measured 64K CUDA-graph profile. Native Rust Goose and standalone Qwen Code both completed real local tool calls. Qwen Code fits the larger window but spends roughly 10K tokens on its fresh built-in prompt/tool envelope; Goose remains the lower-overhead interactive option.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
 See `reports/evaluation-and-agent-status-2026-08-29.md` for the complete attempt ledger, dataset map, agent results, public W8A8 comparison, and next evaluation ladder.
