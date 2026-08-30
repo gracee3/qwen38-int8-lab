@@ -1,0 +1,84 @@
+{
+  "blocker": {
+    "code": "request_exceeds_fixed_context",
+    "document_id": 356,
+    "observed_tokens": 12314,
+    "protocol_limit_tokens": 8191,
+    "stage": "request_preflight",
+    "task": "leaderboard_gpqa_extended"
+  },
+  "datasets": {
+    "artifact_sha256": "94e55096ecdc759c55b086108ce3c620aee1f41f0e1547883720e5b719217b7a",
+    "identity_sha256": "70b17b98fb6a85be660437476145324ec62667cd0f843f2744fba7d37e9841de",
+    "records": {
+      "bbh": {
+        "revision": "b5306be6f827cfafbb545ff5a51f96916029b0fd",
+        "split_count_fingerprints_sha256": "ed5aa4b9634e16495861ac241cec26644019e2c08cd7a4e410bfe19e1db537c0"
+      },
+      "gpqa": {
+        "private": true,
+        "revision": "633f5ee89ab8ad4522a9f850766b73f62147ffdd",
+        "split_count_fingerprints_sha256": "12bb26df825dba21b32bdafc7ae197643224ad0aac1303dffdf22788ada810c5"
+      },
+      "ifeval": {
+        "revision": "5a5661c2a35488308556cf4453dc074d1eba91a0",
+        "split_count_fingerprints_sha256": "18d695e347f532ea1840221db0ce1862c4dedd23ffef9306937dfc1b8bf24ea0"
+      },
+      "math_hard": {
+        "revision": "0530c78699ea5e8eb5530600900e1f328b48acad",
+        "split_count_fingerprints_sha256": "769faf1c39bfded0a78a5291952323d522c0a63d542d3c8b38ba53f225405e83"
+      },
+      "mmlu_pro": {
+        "revision": "b189ec765aa7ed75c8acfea42df31fdae71f97be",
+        "split_count_fingerprints_sha256": "8955d568377bd9561fe2acf715f6f362d973034a795c2f6c20682913e6ee32ca"
+      },
+      "musr": {
+        "revision": "7c365b439a222150f317764d4f16ae6c96d7d94a",
+        "split_count_fingerprints_sha256": "b4e6c78ec995df357fbeebf8026d1ec098eedb99a7914e7ebde035373473e7c0"
+      }
+    },
+    "status": "passed"
+  },
+  "decision": "blocked_no_scores_no_retention_or_deployment_recommendation",
+  "evidence_root": "/data/qwen38-int8-lab/evaluations/20260825T031746Z",
+  "harness": {
+    "git_revision": "6d642546f4688648fced259eb3302efd36ece5af",
+    "group": "leaderboard",
+    "version": "0.4.12"
+  },
+  "implementation": {
+    "commit": "86a3af64077927f1b486e5541654955da61b9e07",
+    "evaluation_image_id": "sha256:c0d2de65c61fe66ba62e4cc9270d1e295e75a28f25249901e4e722fc166535e8",
+    "pull_request": 10
+  },
+  "models": {
+    "bf16_manifest_identity": "30cb5077377a40d1b31667dc05e2a3bd3b229284f5289a9956691021e1352db6",
+    "loaded": false,
+    "mounts": "read_only",
+    "w8a8_manifest_identity": "fbc02d65e68d4c06c9f9b665624498cdac07bb7fbd46e5fe087a54cf7bbe207d"
+  },
+  "protocol": {
+    "context_length": 8192,
+    "enable_thinking": false,
+    "fewshot_as_multiturn": true,
+    "seed": 42,
+    "tensor_parallel_size": 2
+  },
+  "run_id": "20260825T031746Z",
+  "scores": {},
+  "status": "blocked",
+  "validation": {
+    "dataset_prefetch_counts_and_fingerprints": "passed",
+    "docker_build": "passed",
+    "gated_samples_published": false,
+    "image_pip_check": "passed",
+    "image_unit_tests": "10_passed",
+    "initial_and_stage_host_preflights": "passed",
+    "protected_nvme_after": "read_only_unmounted",
+    "python_compile": "passed",
+    "request_preflight": "failed_closed_on_overlength_request",
+    "shellcheck": "passed",
+    "task_validation_offline": "passed",
+    "yaml_parse": "passed"
+  }
+}

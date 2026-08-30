@@ -1,0 +1,2 @@
+# Evaluation overlay resolved against qwen38-int8-lab/vllm:0.1.0.
+lm-eval[ifeval,math,sentencepiece,vllm]==0.4.12

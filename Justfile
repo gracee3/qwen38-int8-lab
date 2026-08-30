@@ -8,8 +8,13 @@ source_model := env_var_or_default("SOURCE_MODEL", "/home/emmy/workspace/qwen3.8
 output_model := env_var_or_default("OUTPUT_MODEL", model_root + "/Qwen3.8-27B-W8A8-INT8")
 quant_image := env_var_or_default("QUANT_IMAGE", "qwen38-int8-lab/quant:0.1.0")
 vllm_image := env_var_or_default("VLLM_IMAGE", "qwen38-int8-lab/vllm:0.1.0")
+eval_image := env_var_or_default("EVAL_IMAGE", "qwen38-int8-lab/eval:0.1.0")
+eval_context := "16384"
 port := env_var_or_default("PORT", "8000")
 served_model := env_var_or_default("SERVED_MODEL", "qwen38-w8a8")
+api_key := env_var_or_default("VLLM_API_KEY", "local-qwen-only")
+inference_context := env_var_or_default("INFERENCE_CONTEXT", "65536")
+inference_kv_cache_bytes := env_var_or_default("INFERENCE_KV_CACHE_BYTES", "2684354560")
 
 default:
     @just --list
@@ -56,6 +61,27 @@ quant:
 build-vllm:
     DOCKER_BUILDKIT=1 docker build --progress=plain --build-arg VCS_REF="$(git -C "{{repo_root}}" rev-parse HEAD)" -t "{{vllm_image}}" -f "{{repo_root}}/docker/vllm/Dockerfile" "{{repo_root}}"
 
+build-eval:
+    base_id=$(docker image inspect "{{vllm_image}}" | python3 -c 'import json,sys; print(json.load(sys.stdin)[0]["Id"])'); test "$base_id" = "sha256:60508d8dcbbb0a985955e9cf2f66e561a66c3f1c99bd7ec8fa5020e991a0ef4d"; DOCKER_BUILDKIT=1 docker build --progress=plain --build-arg VLLM_IMAGE="{{vllm_image}}" --build-arg VCS_REF="$(git -C "{{repo_root}}" rev-parse HEAD)" -t "{{eval_image}}" -f "{{repo_root}}/docker/eval/Dockerfile" "{{repo_root}}"
+
+eval-dataset-preflight cache_root output:
+    test ! -e "{{cache_root}}"; install -d -m 700 "{{cache_root}}"; output_parent=$(dirname "{{output}}"); install -d "$output_parent"; docker run --rm --user "$(id -u):$(id -g)" --mount type=bind,src="{{cache_root}}",dst=/cache --mount type=bind,src="$output_parent",dst=/out --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HF_TOKEN --env HF_HOME=/cache/huggingface --env HF_DATASETS_CACHE=/cache/huggingface/datasets --entrypoint python "{{eval_image}}" /app/eval/scripts/prefetch.py --output "/out/$(basename "{{output}}")"
+
+eval-request-preflight cache_root output:
+    output_parent=$(dirname "{{output}}"); install -d "$output_parent"; docker run --rm --user "$(id -u):$(id -g)" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{source_model}}",dst=/models/bf16,readonly --mount type=bind,src="{{cache_root}}",dst=/cache --mount type=bind,src="$output_parent",dst=/out --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HF_HOME=/cache/huggingface --env HF_DATASETS_CACHE=/cache/huggingface/datasets --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1 --entrypoint python "{{eval_image}}" /app/eval/scripts/request_preflight.py --candidate "/models/$(basename "{{output_model}}")" --source /models/bf16 --output "/out/$(basename "{{output}}")" --maximum-request-output /out/maximum-loglikelihood-request.json
+
+eval-smoke run_root:
+    test -f "{{run_root}}/dataset-preflight.json"; docker run --rm --gpus all --ipc=host --user "$(id -u):$(id -g)" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{run_root}}",dst=/run --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HOME=/run/home --env HF_HOME=/run/cache/huggingface --env HF_DATASETS_CACHE=/run/cache/huggingface/datasets --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1 --env VLLM_USE_FLASHINFER_SAMPLER=0 --entrypoint python "{{eval_image}}" /app/eval/scripts/run_harness.py run --model vllm --model_args "pretrained=/models/$(basename "{{output_model}}"),dtype=bfloat16,tensor_parallel_size=2,max_model_len={{eval_context}},kv_cache_dtype=bfloat16,seed=42,enforce_eager=True,enable_prefix_caching=False,add_bos_token=False,enable_thinking=False,cpu_offload_gb=0,language_model_only=True,enable_chunked_prefill=True,max_num_batched_tokens=1024,kv_cache_memory_bytes=805306368" --tasks leaderboard --limit 2 --batch_size auto --max_batch_size 1 --seed 42 --apply_chat_template --fewshot_as_multiturn --log_samples --output_path /run/smoke
+
+eval-validate cache_root:
+    docker run --rm --user "$(id -u):$(id -g)" --mount type=bind,src="{{cache_root}}",dst=/cache --mount type=bind,src="{{repo_root}}",dst=/app,readonly --env HF_HOME=/cache/huggingface --env HF_DATASETS_CACHE=/cache/huggingface/datasets --env HF_DATASETS_OFFLINE=1 --env HF_HUB_OFFLINE=1 --entrypoint python "{{eval_image}}" /app/eval/scripts/run_harness.py validate --tasks leaderboard
+
+eval-standardized expected_commit:
+    EXPECTED_COMMIT="{{expected_commit}}" EVAL_IMAGE="{{eval_image}}" "{{repo_root}}/scripts/accuracy_eval_supervisor.sh"
+
+eval-candidate-only expected_commit:
+    EVAL_SCOPE=candidate-only EXPECTED_COMMIT="{{expected_commit}}" EVAL_IMAGE="{{eval_image}}" "{{repo_root}}/scripts/accuracy_eval_supervisor.sh"
+
 shell-vllm:
     docker run --rm -it --gpus all --ipc=host --entrypoint /bin/bash --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -w /app "{{vllm_image}}"
 
@@ -63,13 +89,13 @@ validate:
     docker run --rm --gpus all --ipc=host --entrypoint python --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -w /app "{{vllm_image}}" /app/quant/scripts/validate_quant.py /models/$(basename "{{output_model}}")
 
 serve:
-    mkdir -p "{{work_root}}/logs"; log="{{work_root}}/logs/vllm-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "vLLM log: $log"; docker run --rm --gpus all --ipc=host -p "{{port}}:8000" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e VLLM_CACHE_ROOT=/work/cache/vllm -e VLLM_USE_FLASHINFER_SAMPLER=0 "{{vllm_image}}" /models/$(basename "{{output_model}}") --served-model-name "{{served_model}}" --tensor-parallel-size 2 --max-model-len 2048 --gpu-memory-utilization 0.88 --kv-cache-dtype bfloat16 --seed 42 --enforce-eager --no-enable-prefix-caching --no-enable-chunked-prefill 2>&1 | tee "$log"
+    mkdir -p "{{work_root}}/logs"; log="{{work_root}}/logs/vllm-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "vLLM log: $log"; docker run --rm --gpus all --ipc=host -p "127.0.0.1:{{port}}:8000" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e VLLM_CACHE_ROOT=/work/cache/vllm -e VLLM_USE_FLASHINFER_SAMPLER=0 "{{vllm_image}}" /models/$(basename "{{output_model}}") --served-model-name "{{served_model}}" --api-key "{{api_key}}" --tensor-parallel-size 2 --max-model-len "{{inference_context}}" --kv-cache-memory-bytes "{{inference_kv_cache_bytes}}" --kv-cache-dtype bfloat16 --cpu-offload-gb 0 --seed 42 --language-model-only --enable-prefix-caching --enable-chunked-prefill --max-num-batched-tokens 2048 --max-num-seqs 1 --enable-auto-tool-choice --tool-call-parser qwen3_xml --default-chat-template-kwargs '{"enable_thinking":false}' --generation-config vllm --no-enable-log-requests --disable-uvicorn-access-log 2>&1 | tee "$log"
 
 smoke:
-    python3 "{{repo_root}}/inference/scripts/smoke_test.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{served_model}}" --output "{{work_root}}/results/inference-smoke-$(date -u +%Y%m%dT%H%M%SZ).json"
+    python3 "{{repo_root}}/inference/scripts/smoke_test.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{served_model}}" --api-key "{{api_key}}" --output "{{work_root}}/results/inference-smoke-$(date -u +%Y%m%dT%H%M%SZ).json"
 
 bench:
-    python3 "{{repo_root}}/inference/scripts/benchmark.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{served_model}}" --output "{{work_root}}/results/benchmark-$(date -u +%Y%m%dT%H%M%SZ).json"
+    python3 "{{repo_root}}/inference/scripts/benchmark.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{served_model}}" --api-key "{{api_key}}" --output "{{work_root}}/results/benchmark-suite-$(date -u +%Y%m%dT%H%M%SZ).json"
 
 logs:
     @find "{{work_root}}/logs" -maxdepth 1 -type f -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' | sort
