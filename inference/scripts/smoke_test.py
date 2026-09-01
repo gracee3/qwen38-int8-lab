@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 import urllib.error
 import urllib.request
@@ -30,7 +31,11 @@ def main() -> int:
     parser.add_argument("--model", default="qwen38-w8a8")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--timeout", type=float, default=180.0)
-    parser.add_argument("--api-key", help="Optional bearer token for the inference endpoint")
+    parser.add_argument(
+        "--api-key",
+        default=os.environ.get("INFERENCE_API_KEY"),
+        help="Optional bearer token; defaults to INFERENCE_API_KEY",
+    )
     args = parser.parse_args()
 
     started = time.monotonic()
