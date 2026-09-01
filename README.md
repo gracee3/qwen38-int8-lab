@@ -72,14 +72,16 @@ just quant-small  # 32-sample x 512-token scaling candidate under /work/scratch
 just quant        # authorized 512-sample x 2,048-token quality candidate
 
 just build-vllm
+just build-llama
 just validate
 just serve       # 64K, CUDA-graph server on loopback port 8000
 just smoke       # from a second shell
 just bench
 
 # Optional Qwen3.5-27B Q4_K_M llama.cpp path with GPU 1 ASR headroom
-just serve-llama       # 131,072-token candidate
+just serve-llama       # containerized 131,072-token candidate
 just serve-llama-160k  # 163,840-token experiment; not yet promoted
+just serve-llama-host  # direct pinned host-build diagnostic
 just smoke-llama
 just probe-llama 120000
 

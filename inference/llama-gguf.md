@@ -46,9 +46,11 @@ cmake --build /home/emmy/workspace/git/llama.cpp/build-cuda-shared \
   --config Release -j 8 --target llama-server llama-cli llama-bench
 ```
 
-Start the 128K candidate on loopback port 8000:
+Build the pinned project image, then start the 128K candidate on loopback port
+8000:
 
 ```bash
+just build-llama
 just serve-llama
 ```
 
@@ -73,6 +75,8 @@ not persist the large generated prompt or response text.
 The API key defaults to `local-qwen-only`, the model alias defaults to
 `qwen35-27b-q4km`, and both can be overridden with `LLAMA_API_KEY` and
 `LLAMA_MODEL_ALIAS`. `LLAMA_TENSOR_SPLIT` controls the layer allocation.
+`serve-llama-host` retains the direct host-build path for comparison; normal
+project operation uses the image built by `docker/llama/Dockerfile`.
 
 ## Promotion gates
 

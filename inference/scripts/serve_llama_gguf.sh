@@ -16,6 +16,7 @@ work_root="${WORK_ROOT:-$DEFAULT_WORK_ROOT}"
 context="${LLAMA_CONTEXT:-131072}"
 tensor_split="${LLAMA_TENSOR_SPLIT:-3,1}"
 port="${PORT:-8000}"
+host="${LLAMA_HOST:-127.0.0.1}"
 api_key="${LLAMA_API_KEY:-local-qwen-only}"
 model_alias="${LLAMA_MODEL_ALIAS:-qwen35-27b-q4km}"
 
@@ -47,7 +48,11 @@ test "$actual_sha256" = "$MODEL_SHA256" || {
     exit 1
 }
 
-actual_commit="$(git -C "$llama_root" rev-parse HEAD)"
+if [[ -f "$llama_root/REVISION" ]]; then
+    actual_commit="$(<"$llama_root/REVISION")"
+else
+    actual_commit="$(git -C "$llama_root" rev-parse HEAD)"
+fi
 test "$actual_commit" = "$LLAMA_COMMIT" || {
     echo "llama.cpp commit mismatch: expected $LLAMA_COMMIT, found $actual_commit" >&2
     exit 1
@@ -74,7 +79,7 @@ exec > >(tee "$log") 2>&1
 exec "$server" \
     --model "$model" \
     --alias "$model_alias" \
-    --host 127.0.0.1 \
+    --host "$host" \
     --port "$port" \
     --api-key-file <(printf '%s\n' "$api_key") \
     --ctx-size "$context" \
