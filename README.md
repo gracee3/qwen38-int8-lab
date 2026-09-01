@@ -101,6 +101,8 @@ read-only; it does not duplicate the toolkit in Docker storage:
 
 ```bash
 just build-vllm-fp8-sm86
+just serve-vllm-tp2-fp8-160k
+# Retained only as a slower, memory-imbalanced comparison:
 just serve-vllm-pp2-fp8-160k
 ```
 
@@ -109,6 +111,10 @@ reliable FP8 KV scales for the hybrid GDN model and therefore uses scale 1.0.
 The PP stages are also memory-imbalanced on this checkpoint, leaving much less
 headroom on the second GPU than the first. Require long-context retrieval,
 Qwen Code tool use, and native-ASR co-residency gates before relying on it.
+The initial 1,024-token-prompt comparison measured 39.264 tok/s median decode
+for TP2 versus 22.961 tok/s for PP2. TP2 left about 3 GiB free symmetrically;
+PP2 left only about 0.4 GiB on its second stage under the same short benchmark.
+TP2 is therefore the preferred FP8 candidate.
 
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`. Serving also accepts `VLLM_API_KEY`, `INFERENCE_CONTEXT`, and `INFERENCE_KV_CACHE_BYTES` overrides.
 
