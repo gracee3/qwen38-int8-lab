@@ -120,6 +120,14 @@ The TP2 candidate also retrieved all three fixed synthetic codes from a
 one deterministic probe, not sufficient evidence to promote scale-1 FP8 KV as
 quality-equivalent to BF16.
 
+With both RTX 3090s capped at 275 W, the same short TP2/FP8 benchmark measured
+38.501 tok/s median decode, only 1.9% below the 39.264 tok/s uncapped result.
+Observed benchmark temperatures peaked at 51/60 C. A subsequent 120,085-token
+probe retrieved all three codes in 86.383 seconds; sustained prefill stayed at
+the 275 W caps and peaked at 61/69 C. The server then stopped cleanly with no
+OOM. These power limits are host runtime state and are not configured by this
+repository.
+
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`. Serving also accepts `VLLM_API_KEY`, `INFERENCE_CONTEXT`, and `INFERENCE_KV_CACHE_BYTES` overrides.
 
 The optional GGUF serving path is documented in
