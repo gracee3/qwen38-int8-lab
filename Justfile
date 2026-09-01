@@ -15,6 +15,8 @@ served_model := env_var_or_default("SERVED_MODEL", "qwen38-w8a8")
 api_key := env_var_or_default("VLLM_API_KEY", "local-qwen-only")
 inference_context := env_var_or_default("INFERENCE_CONTEXT", "65536")
 inference_kv_cache_bytes := env_var_or_default("INFERENCE_KV_CACHE_BYTES", "2684354560")
+llama_api_key := env_var_or_default("LLAMA_API_KEY", "local-qwen-only")
+llama_model_alias := env_var_or_default("LLAMA_MODEL_ALIAS", "qwen35-27b-q4km")
 
 default:
     @just --list
@@ -90,6 +92,18 @@ validate:
 
 serve:
     mkdir -p "{{work_root}}/logs"; log="{{work_root}}/logs/vllm-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "vLLM log: $log"; docker run --rm --gpus all --ipc=host -p "127.0.0.1:{{port}}:8000" --mount type=bind,src="{{model_root}}",dst=/models,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e VLLM_CACHE_ROOT=/work/cache/vllm -e VLLM_USE_FLASHINFER_SAMPLER=0 "{{vllm_image}}" /models/$(basename "{{output_model}}") --served-model-name "{{served_model}}" --api-key "{{api_key}}" --tensor-parallel-size 2 --max-model-len "{{inference_context}}" --kv-cache-memory-bytes "{{inference_kv_cache_bytes}}" --kv-cache-dtype bfloat16 --cpu-offload-gb 0 --seed 42 --language-model-only --enable-prefix-caching --enable-chunked-prefill --max-num-batched-tokens 2048 --max-num-seqs 1 --enable-auto-tool-choice --tool-call-parser qwen3_xml --default-chat-template-kwargs '{"enable_thinking":false}' --generation-config vllm --no-enable-log-requests --disable-uvicorn-access-log 2>&1 | tee "$log"
+
+serve-llama:
+    LLAMA_CONTEXT=131072 PORT="{{port}}" LLAMA_API_KEY="{{llama_api_key}}" LLAMA_MODEL_ALIAS="{{llama_model_alias}}" WORK_ROOT="{{work_root}}" "{{repo_root}}/inference/scripts/serve_llama_gguf.sh"
+
+serve-llama-160k:
+    LLAMA_CONTEXT=163840 PORT="{{port}}" LLAMA_API_KEY="{{llama_api_key}}" LLAMA_MODEL_ALIAS="{{llama_model_alias}}" WORK_ROOT="{{work_root}}" "{{repo_root}}/inference/scripts/serve_llama_gguf.sh"
+
+smoke-llama:
+    INFERENCE_API_KEY="{{llama_api_key}}" python3 "{{repo_root}}/inference/scripts/smoke_test.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{llama_model_alias}}" --output "{{work_root}}/results/llama-inference-smoke-$(date -u +%Y%m%dT%H%M%SZ).json"
+
+probe-llama target_tokens="120000":
+    LLAMA_API_KEY="{{llama_api_key}}" python3 "{{repo_root}}/inference/scripts/long_context_probe.py" --base-url "http://127.0.0.1:{{port}}" --model "{{llama_model_alias}}" --target-tokens "{{target_tokens}}" --output "{{work_root}}/results/llama-context-probe-{{target_tokens}}-$(date -u +%Y%m%dT%H%M%SZ).json"
 
 smoke:
     python3 "{{repo_root}}/inference/scripts/smoke_test.py" --base-url "http://127.0.0.1:{{port}}/v1" --model "{{served_model}}" --api-key "{{api_key}}" --output "{{work_root}}/results/inference-smoke-$(date -u +%Y%m%dT%H%M%SZ).json"

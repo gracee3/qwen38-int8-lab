@@ -77,6 +77,12 @@ just serve       # 64K, CUDA-graph server on loopback port 8000
 just smoke       # from a second shell
 just bench
 
+# Optional Qwen3.5-27B Q4_K_M llama.cpp path with GPU 1 ASR headroom
+just serve-llama       # 131,072-token candidate
+just serve-llama-160k  # 163,840-token experiment; not yet promoted
+just smoke-llama
+just probe-llama 120000
+
 # Standardized non-thinking text accuracy (lm-eval v0.4.12)
 just build-eval
 # Run the exact pushed feature commit inside a labeled tmux session:
@@ -86,6 +92,12 @@ just eval-candidate-only <exact-pushed-commit>
 ```
 
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`. Serving also accepts `VLLM_API_KEY`, `INFERENCE_CONTEXT`, and `INFERENCE_KV_CACHE_BYTES` overrides.
+
+The optional GGUF serving path is documented in
+[`inference/llama-gguf.md`](inference/llama-gguf.md). It pins llama.cpp and the
+Q4_K_M source revision, uses compatible layer splitting with quantized KV, and
+keeps the 160K profile experimental until long-context, Qwen Code, soak, and
+native-ASR co-residency gates pass.
 
 `just quant-smoke` is designed to quantize a tiny synthetic Qwen3.5/3.8-shaped model with the real package APIs and serialization path. It is not a partially quantized 27B checkpoint. Experimental real-source profiles require an explicit destination below `/work/scratch` and are marked non-production. The guarded `just quant` command is reserved for the measured quality run and refuses to overwrite an existing output. The external dataset is pinned to commit `8049631c405ae6576f93f445c6b8166f76f5505a`; run metadata records both dataset fingerprints, seed, count, and aggregate token lengths, never sample text.
 
