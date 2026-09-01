@@ -93,6 +93,23 @@ just eval-standardized <exact-pushed-commit>
 just eval-candidate-only <exact-pushed-commit>
 ```
 
+The separate SM86 FP8 experiment uses pipeline parallelism across both 3090s,
+a 163,840-token window, and a 3 GiB FP8 KV allocation per GPU. FlashInfer must
+JIT its Ampere compatibility kernel, so this profile adds a C++ compiler in a
+small derivative image and mounts the existing host CUDA 13.3 toolkit
+read-only; it does not duplicate the toolkit in Docker storage:
+
+```bash
+just build-vllm-fp8-sm86
+just serve-vllm-pp2-fp8-160k
+```
+
+This is not a promoted quality profile. vLLM 0.27.1 cannot dynamically derive
+reliable FP8 KV scales for the hybrid GDN model and therefore uses scale 1.0.
+The PP stages are also memory-imbalanced on this checkpoint, leaving much less
+headroom on the second GPU than the first. Require long-context retrieval,
+Qwen Code tool use, and native-ASR co-residency gates before relying on it.
+
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`. Serving also accepts `VLLM_API_KEY`, `INFERENCE_CONTEXT`, and `INFERENCE_KV_CACHE_BYTES` overrides.
 
 The optional GGUF serving path is documented in
