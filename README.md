@@ -146,6 +146,23 @@ The default serving command is the measured interactive profile: TP2 across two 
 
 ### Measured inference performance
 
+The same local Qwen3.8-27B W8A8 checkpoint was tested across the original
+profile and the long-context experiments. Single-sequence decode uses a
+1,024-token prompt and forced 256-token output unless noted otherwise.
+
+| Profile | Advertised context | KV cache | GPU power cap | Median decode | Free VRAM after load | Long-context retrieval |
+| --- | ---: | --- | ---: | ---: | ---: | --- |
+| TP2 default | 65,536 | BF16, 2.5 GiB/GPU | 350 W | 39.053 tok/s (7 runs) | ~3.6/~3.6 GiB | Not run |
+| PP2 experiment | 163,840 | FP8, 3 GiB/GPU | 350 W | 22.961 tok/s (3 runs) | ~2.9/~0.4 GiB | Not promoted; stage imbalance |
+| TP2 FP8 | 163,840 | FP8, 3 GiB/GPU | 350 W | 39.264 tok/s (3 runs) | ~3.0/~3.0 GiB | 150,037 tokens: 3/3 codes in 114.636 s |
+| TP2 FP8, capped | 163,840 | FP8, 3 GiB/GPU | 275 W | 38.501 tok/s (3 runs) | ~3.0/~3.0 GiB | 120,085 tokens: 3/3 codes in 86.383 s |
+
+The 275 W profile retained 98.1% of uncapped TP2/FP8 decode throughput. Its
+short benchmark peaked at 51/60 C, and sustained 120K prefill peaked at 61/69
+C while drawing about 270-274 W per card. PP2 is retained only as comparative
+evidence: it was 41.5% slower than uncapped TP2/FP8 and left almost no usable
+headroom on its second stage.
+
 The reviewed default-profile result is **39.053 median decode tok/s** across seven forced 256-token generations, with a very narrow 39.050–39.060 tok/s range. This is single-sequence HTTP inference on two 24 GiB RTX 3090s with vLLM 0.27.1, TP2, BF16 KV, and CUDA graphs.
 
 | Prompt target | Actual cold prompt | Cold approximate prefill | Cold median TTFT | Warm cached effective prefill | Warm median TTFT |
@@ -177,7 +194,7 @@ Benchmark scripts write full JSON under `/data/qwen38-int8-lab/results`; only re
 
 ## Current status
 
-As of 2026-08-30:
+As of 2026-09-01:
 
 - The local source is complete: 18 Safetensors shards, 1,199 tensors, about 51.75 GiB of shard files.
 - Metadata identifies `Qwen3_5ForConditionalGeneration`: 64 text layers (48 recurrent/linear-attention and 16 full-attention), a 27-layer vision tower, and one MTP layer.
@@ -188,7 +205,7 @@ As of 2026-08-30:
 - The standardized accuracy infrastructure is implemented and validated. GPQA access is accepted and all six pinned datasets prefetch and validate offline. Exact-commit run `20260825T031746Z` showed that one zero-shot GPQA Extended document renders four 12,314-token choice requests, exceeding the former 8,192-token protocol. A complete audit found 12,314 tokens is the suite maximum, so the reviewed follow-up protocol uses a uniform 16,384-token context without truncation.
 - A former full-group attempt exhausted GPU memory while producing prompt log-probabilities. The candidate-only retry therefore uses text-only loading, chunked prefill, and an explicit bounded KV allocation, with the suite maximum executed as a mandatory runtime gate before smoke.
 - The revised preflight, 12,314-token runtime log-likelihood gate, and limited W8A8 smoke passed. MMLU-Pro was manually paused at 5,811/113,990 requests to prioritize interactive inference; there is no reportable accuracy score, and later resumption restarts that group from zero.
-- A loopback-only vLLM server is running the candidate with the measured 64K CUDA-graph profile. Native Rust Goose and standalone Qwen Code both completed real local tool calls. Qwen Code fits the larger window but spends roughly 10K tokens on its fresh built-in prompt/tool envelope; Goose remains the lower-overhead interactive option.
+- Loopback-only vLLM trials validated the 64K BF16 default and experimental 160K FP8 profile. Native Rust Goose and standalone Qwen Code both completed real local tool calls. Qwen Code fits the larger window but spends roughly 10K tokens on its fresh built-in prompt/tool envelope; Goose remains the lower-overhead interactive option. The trial server was stopped cleanly after validation.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
 See `reports/evaluation-and-agent-status-2026-08-29.md` for the complete attempt ledger, dataset map, agent results, public W8A8 comparison, and next evaluation ladder.
