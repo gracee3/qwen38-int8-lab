@@ -115,6 +115,10 @@ The initial 1,024-token-prompt comparison measured 39.264 tok/s median decode
 for TP2 versus 22.961 tok/s for PP2. TP2 left about 3 GiB free symmetrically;
 PP2 left only about 0.4 GiB on its second stage under the same short benchmark.
 TP2 is therefore the preferred FP8 candidate.
+The TP2 candidate also retrieved all three fixed synthetic codes from a
+150,037-token prompt in 114.636 seconds without an OOM or server reset. This is
+one deterministic probe, not sufficient evidence to promote scale-1 FP8 KV as
+quality-equivalent to BF16.
 
 Paths and image names are overridable with `MODEL_ROOT`, `WORK_ROOT`, `SOURCE_MODEL`, `OUTPUT_MODEL`, `QUANT_IMAGE`, `VLLM_IMAGE`, and `PORT`. Serving also accepts `VLLM_API_KEY`, `INFERENCE_CONTEXT`, and `INFERENCE_KV_CACHE_BYTES` overrides.
 

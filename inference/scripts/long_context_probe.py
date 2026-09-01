@@ -43,16 +43,24 @@ def request_json(url: str, api_key: str, payload: dict, timeout: int) -> dict:
 
 
 def tokenize(base_url: str, api_key: str, content: str, timeout: int) -> int:
-    result = request_json(
-        f"{base_url.rstrip('/')}/tokenize",
-        api_key,
-        {"content": content, "add_special": False},
-        timeout,
-    )
-    tokens = result.get("tokens")
-    if not isinstance(tokens, list):
-        raise RuntimeError(f"unexpected tokenize response keys: {sorted(result)}")
-    return len(tokens)
+    errors = []
+    # llama.cpp names this field `content`; vLLM names it `prompt`.
+    for field in ("content", "prompt"):
+        try:
+            result = request_json(
+                f"{base_url.rstrip('/')}/tokenize",
+                api_key,
+                {field: content, "add_special": False},
+                timeout,
+            )
+        except RuntimeError as exc:
+            errors.append(f"{field}: {exc}")
+            continue
+        tokens = result.get("tokens")
+        if not isinstance(tokens, list):
+            raise RuntimeError(f"unexpected tokenize response keys: {sorted(result)}")
+        return len(tokens)
+    raise RuntimeError("tokenize failed for content and prompt fields: " + "; ".join(errors))
 
 
 def build_prompt(repeats: int) -> str:
