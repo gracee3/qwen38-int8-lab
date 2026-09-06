@@ -437,12 +437,13 @@ def run_synthetic_smoke(
 
 def dataset_statistics(dataset: Any, calibration: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
     lengths = [len(dataset[index]["input_ids"]) for index in range(len(dataset))]
-    if len(lengths) != profile["num_samples"]:
+    if profile.get("num_samples") and len(lengths) != profile["num_samples"]:
         raise RuntimeError(f"Selected {len(lengths)} calibration samples; expected {profile['num_samples']}")
+    is_v2 = "corpus_dir" in calibration and "sources" in calibration
     return {
-        "dataset": calibration["dataset"] if not profile.get("local_prompts") else "local_smoke_prompts",
-        "revision": calibration.get("revision") if not profile.get("local_prompts") else None,
-        "split": calibration["split"] if not profile.get("local_prompts") else None,
+        "dataset": "agentic-v2-mixture" if is_v2 else (calibration.get("dataset", "local_smoke_prompts") if not profile.get("local_prompts") else "local_smoke_prompts"),
+        "revision": None if (is_v2 or profile.get("local_prompts")) else calibration.get("revision"),
+        "split": None if (is_v2 or profile.get("local_prompts")) else calibration.get("split"),
         "seed": calibration["seed"],
         "sample_count": len(lengths),
         "source_fingerprint": getattr(dataset, "_source_fingerprint", None),
@@ -465,6 +466,19 @@ def load_calibration_dataset(config: dict[str, Any], profile: dict[str, Any], to
     if profile.get("local_prompts"):
         rows = [json.loads(line) for line in Path(calibration["local_smoke_file"]).read_text().splitlines() if line]
         dataset = Dataset.from_list((rows * count)[:count])
+    elif "corpus_dir" in calibration and "sources" in calibration:
+        # v2 multi-source pre-tokenized corpus
+        corpus_path = Path(calibration["corpus_dir"]) / "calibration.parquet"
+        if not corpus_path.exists():
+            raise FileNotFoundError(
+                f"Pre-tokenized corpus not found at {corpus_path}. "
+                f"Run 'just v2-calibration-prep' first."
+            )
+        dataset = Dataset.from_parquet(str(corpus_path))
+        if count is not None:
+            dataset = dataset.select(range(min(count, len(dataset))))
+        source_fingerprint = corpus_path.stem
+        return dataset
     else:
         dataset = load_dataset(
             calibration["dataset"],
