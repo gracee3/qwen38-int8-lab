@@ -7,6 +7,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 
@@ -16,6 +17,40 @@ SPEC = importlib.util.spec_from_file_location("quantize", ROOT / "quant/scripts/
 assert SPEC and SPEC.loader
 quantize = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(quantize)
+
+
+class ResourceGuardTests(unittest.TestCase):
+    def test_defaults_and_override(self):
+        self.assertEqual(quantize.resource_abort_limits({}), {
+            "min_mem_available_bytes": 8 * 1024**3,
+            "max_swap_growth_bytes": 32 * 1024**3,
+            "sustain_seconds": 10,
+        })
+        self.assertEqual(quantize.resource_abort_limits({"safety": {"max_swap_growth_gib": 48}})["max_swap_growth_bytes"], 48 * 1024**3)
+
+    def test_rejects_invalid_limits(self):
+        for value in (0, -1, True, "32", 1.5):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                quantize.resource_abort_limits({"safety": {"max_swap_growth_gib": value}})
+
+    def test_sustained_pressure_reports_reason_before_signal(self):
+        # Exercise the monitor without allocating memory or delivering a signal.
+        with patch.object(quantize.PeakMonitor, "_process_memory_status", return_value=(0, 0)), \
+             patch.object(quantize.PeakMonitor, "_memory_status", return_value=(64 * 1024**3, 0)):
+            monitor = quantize.PeakMonitor(abort_limits=quantize.resource_abort_limits({}))
+        monitor._unsafe_since = 1
+        with patch.object(monitor, "_process_memory_status", return_value=(0, 0)), \
+             patch.object(monitor, "_memory_status", return_value=(64 * 1024**3, 33 * 1024**3)), \
+             patch.object(monitor, "_read_gpus", return_value={}), \
+             patch.object(quantize.shutil, "disk_usage") as disk, \
+             patch.object(quantize.time, "monotonic", return_value=20), \
+             patch.object(quantize.os, "kill") as kill, \
+             patch.object(quantize, "print") as output:
+            disk.return_value.free = 100 * 1024**3
+            monitor._run()
+            kill.assert_called_once_with(quantize.os.getpid(), quantize.signal.SIGINT)
+            self.assertEqual(monitor.safety_trigger_reason, "host_swap_growth_above_limit")
+            self.assertIn("RESOURCE_SAFETY_ABORT", output.call_args.args[0])
 
 
 class ProcessorCopyTests(unittest.TestCase):

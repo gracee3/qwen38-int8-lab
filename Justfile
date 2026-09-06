@@ -51,6 +51,9 @@ load-trace:
     mkdir -p "{{work_root}}/logs" "{{work_root}}/results" "{{work_root}}/scratch"; stamp=$(date -u +%Y%m%dT%H%M%SZ); log="{{work_root}}/logs/load-trace-$stamp.log"; echo "load/trace log: $log"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b.yaml --profile tiny_source --load-trace-only 2>&1 | tee "$log"
 
 quant-tiny:
+    bash "{{repo_root}}/scripts/with_quant_swappiness.sh" just --justfile "{{repo_root}}/Justfile" _quant-tiny
+
+_quant-tiny:
     mkdir -p "{{work_root}}/logs" "{{work_root}}/results" "{{work_root}}/scratch"; stamp=$(date -u +%Y%m%dT%H%M%SZ); output="/work/scratch/Qwen3.8-27B-W8A8-tiny-source-$stamp"; log="{{work_root}}/logs/quant-tiny-$stamp.log"; echo "experimental non-production output: $output"; echo "quant log: $log"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b.yaml --profile tiny_source --output "$output" --execute-full 2>&1 | tee "$log"
 
 dataset-preflight profile="quality":
@@ -64,19 +67,31 @@ v2-calibration-prep-dry:
     docker run --rm --ipc=host --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -w /app "{{quant_image}}" python /app/quant/scripts/prepare_v2_calibration.py --config /app/quant/config/qwen38-27b-v2.yaml --dry-run
 
 quant-real profile output:
+    bash "{{repo_root}}/scripts/with_quant_swappiness.sh" just --justfile "{{repo_root}}/Justfile" _quant-real "{{profile}}" "{{output}}"
+
+_quant-real profile output:
     mkdir -p "{{work_root}}/logs" "{{work_root}}/results" "{{work_root}}/scratch"; log="{{work_root}}/logs/quant-{{profile}}-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "quant log: $log"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{model_root}}",dst=/models --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b.yaml --profile "{{profile}}" --output "{{output}}" --execute-full 2>&1 | tee "$log"
 
 quant-small:
     stamp=$(date -u +%Y%m%dT%H%M%SZ); just quant-real small "/work/scratch/Qwen3.8-27B-W8A8-small-$stamp"
 
 quant:
+    bash "{{repo_root}}/scripts/with_quant_swappiness.sh" just --justfile "{{repo_root}}/Justfile" _quant
+
+_quant:
     mkdir -p "{{work_root}}/logs"; log="{{work_root}}/logs/quant-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "quant log: $log"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{model_root}}",dst=/models --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b.yaml --profile quality --output /models/$(basename "{{output_model}}") --execute-full 2>&1 | tee "$log"
 
 # Agentic W8A8 v2: uses pre-tokenized corpus from v2-calibration-prep
 v2-quant-small:
+    bash "{{repo_root}}/scripts/with_quant_swappiness.sh" just --justfile "{{repo_root}}/Justfile" _v2-quant-small
+
+_v2-quant-small:
     stamp=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p "{{work_root}}/logs" "{{work_root}}/scratch"; log="{{work_root}}/logs/v2-quant-small-$stamp.log"; echo "v2 small pilot log: $log"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{model_root}}",dst=/models --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b-v2.yaml --profile small --output "/work/scratch/Qwen3.8-27B-W8A8-Agentic-v2-small-$stamp" --execute-full 2>&1 | tee "$log"
 
 v2-quant:
+    bash "{{repo_root}}/scripts/with_quant_swappiness.sh" just --justfile "{{repo_root}}/Justfile" _v2-quant
+
+_v2-quant:
     mkdir -p "{{work_root}}/logs"; log="{{work_root}}/logs/v2-quant-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "v2 full quant log: $log"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{model_root}}",dst=/models --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b-v2.yaml --profile quality --output /models/Qwen3.8-27B-W8A8-INT8-Agentic-v2 --execute-full 2>&1 | tee "$log"
 
 build-vllm:
