@@ -15,9 +15,13 @@
   against native uninterrupted sequential GPTQ, after fresh-process resumption.
   W8A8: 109 state tensors; expanded-target W4A16: 127. BF16 and CPU-offloaded
   registered parameter storage are covered, including final-stage recovery.
+  Both schemes also passed on one actual RTX 3090, with CPU offload, at the
+  same implementation commit. Initial snapshot and final-stage retries each
+  matched the native uninterrupted CUDA baseline exactly. The guarded test
+  wrapper captured and left swappiness at 1; no full quant was launched.
 - Host tests: 24 cases, 21 passed, three skipped because host NumPy is absent.
-  Installer/wrapper pass shell syntax and ShellCheck. Full 27B checkpoint I/O,
-  CUDA resume and power-loss recovery are not yet validated.
+  Installer/wrapper pass shell syntax and ShellCheck. Full 27B CUDA checkpoint
+  I/O and power-loss recovery are not yet validated.
 
 ## Operational limits
 
