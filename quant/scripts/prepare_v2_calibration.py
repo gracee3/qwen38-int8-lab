@@ -99,13 +99,20 @@ def load_source_dataset(spec: SourceSpec, cache_dir: str):
 def extract_text(row: dict[str, Any]) -> str | None:
     """Extract renderable text from a dataset row.
 
-    Handles: 'messages' (chat), 'text' (plain), 'conversations' (ShareGPT).
-    Returns None if the row cannot be rendered.
+    Handles: 'messages' (chat list or JSON string), 'text' (plain),
+    'conversations' (ShareGPT). Returns None if the row cannot be rendered.
     """
     messages = row.get("messages")
+    if messages and isinstance(messages, str):
+        try:
+            messages = json.loads(messages)
+        except (json.JSONDecodeError, TypeError):
+            return messages if messages.strip() else None
     if messages and isinstance(messages, list):
         parts = []
         for msg in messages:
+            if not isinstance(msg, dict):
+                continue
             role = msg.get("role", "unknown")
             content = msg.get("content", "")
             if isinstance(content, list):

@@ -75,7 +75,7 @@ calibration:
       repo: togethercomputer/CoderForge-Preview
       config: trajectories
       revision: null
-      split: null
+      split: filtered_reward1
       token_share: 0.35
       target_tokens: 525000
     - name: Nemotron-Terminal
