@@ -59,6 +59,127 @@ Do not quantize an existing quant. Do not overwrite either the source or the
 current checkpoint. Retain current RAM/swap safeguards and record runtime
 versions, source hashes, recipe hash, and peak memory.
 
+## Expanded recurrent-projection candidate
+
+Added 2026-09-06: capture a separate v2-expanded candidate alongside the
+conservative v2. This is a proposed experiment, not an executed quantization
+or a claim of validated quality.
+
+Both candidates start independently from the original BF16 source and use
+the same frozen public calibration corpus, token order, seed, GPTQ settings,
+and evaluation cases. Keep TP2, FP8 KV, no speculation/MTP execution, and the
+262,144-token target unchanged. This isolates the additional layer targets
+from the calibration-data change.
+
+| Candidate | Targets | Distinct host output |
+| --- | ---: | --- |
+| v2 conservative | 256 existing projections | /data/models/Qwen3.8-27B-W8A8-INT8-Agentic-v2 |
+| v2 expanded | 400: existing 256 plus 144 recurrent projections | /data/models/Qwen3.8-27B-W8A8-INT8-Agentic-v2-Expanded |
+
+### Target scope and estimated savings
+
+Add the following large Linear projections in each of the 48 recurrent
+blocks. Confirm names and dimensions against the immutable local checkpoint
+and instantiated modules before constructing an explicit target manifest.
+
+| Projection family | Expected matrix shape per block (output, input) | Additional matrices | Estimated BF16-to-INT8 savings |
+| --- | --- | ---: | ---: |
+| linear_attn.in_proj_qkv | (10240, 5120) | 48 | 2.34375 GiB |
+| linear_attn.in_proj_z | (6144, 5120) | 48 | 1.40625 GiB |
+| linear_attn.out_proj | (5120, 6144) | 48 | 1.40625 GiB |
+| Total | — | 144 | 5.15625 GiB |
+
+Calculation: sum of matrix element counts times (2 - 1) bytes, divided by
+2^30. Shapes are architecture-derived estimates pending local tensor audit;
+INT8 scales and metadata slightly reduce the net saving.
+
+The historical artifact is approximately 34.27 GiB; the equivalent expanded
+artifact is estimated at approximately 29.1 GiB. Expected loaded weight
+savings under balanced TP2 are roughly 2.58 GiB per GPU. These are not measured
+VRAM results: verify sharding, quantized/fused storage, workspaces, and actual
+post-load memory. Do not convert the estimate directly into a promised
+context capacity or throughput increase.
+
+Replace the blanket recurrent exclusion with precise matching for these
+three families, rather than allowing every recurrent component to quantize.
+Continue preserving in_proj_a, in_proj_b, convolutions, normalization,
+recurrent dynamics parameters, embeddings, output head, vision, and MTP.
+Leave runtime recurrent-state precision unchanged. Quantizing projections
+does not imply quantizing the recurrent state or the FP8 KV scales.
+
+### Implementation and validation
+
+1. Audit actual source tensor names, shapes, dtypes, and bytes. Produce
+   predicted savings and explicit per-candidate target manifests.
+2. Verify installed GPTQ calibration hooks visit every intended module and
+   retain Qwen3_5DecoderLayer sequential boundaries. Pilot the added families
+   before a full expanded build.
+3. Implement candidate-specific serializer/validator expectations: exactly
+   256 targets for conservative and 400 for expanded, plus exact names and
+   shapes. Do not relax the shared validator to accept arbitrary counts.
+4. Verify preserved tensor hashes, processor files, shard/index integrity,
+   scale metadata, and INT8 storage for each added family.
+5. Verify vLLM compatibility for fused projections and TP2 partitioning.
+   Confirm intended native dispatch rather than inferring it from a successful
+   load or silently accepting higher-precision fallback.
+6. Compare conservative and expanded on the same function, repository, terminal,
+   tool-use, and context suites. Include long prefill, continued generation,
+   and multi-turn failure/recovery sequences because recurrent projection
+   errors can affect information carried through subsequent tokens.
+7. Record per-GPU weight/total memory, capacity, latency, and paired quality
+   outcomes. Preserve both candidates until promotion is justified.
+
+If expanded quality regresses, isolate projection families using the same
+corpus. An out_proj-only arm adds 48 targets (304 total) and saves about
+1.41 GiB overall. This is a convenient smaller experiment, not a proven
+ordering of sensitivity. No intermediate arms are required if the full
+expanded candidate is sufficiently validated.
+
+### Public precedent and evidence limits
+
+- [RukaRat Qwen3.8 W8A8](https://huggingface.co/RukaRat/Qwen3.8-27B-INT8-W8A8-imatrix-MTP):
+  the repository's prior audit recorded 144 additional recurrent projections
+  and an approximately 29.1 GiB artifact. The audited revision was
+  d4680bb71d0369f3eacbeb2bf75cad9481125e7a; see
+  reports/evaluation-and-agent-status-2026-08-29.md.
+- Its [published configuration](https://huggingface.co/RukaRat/Qwen3.8-27B-INT8-W8A8-imatrix-MTP/blob/main/config.json)
+  uses per-channel INT8 weights, dynamic per-token INT8 activations, and an
+  imatrix-mse observer. This is relevant targeting/format precedent, not the
+  same algorithm as our GPTQ recipe. Pin and inspect the actual revision
+  before borrowing implementation details; main is mutable.
+- No controlled BF16 quality-retention result was recorded in that audit.
+  Working serving examples or speed claims do not establish Rust/agentic
+  quality or long-context retention for our candidate. Its MTP claims do not
+  apply to this no-MTP profile.
+- [Official Qwen3.5-27B GPTQ-Int4](https://huggingface.co/Qwen/Qwen3.5-27B-GPTQ-Int4)
+  is related-architecture precedent, not validation of Qwen3.8 W8A8.
+- [Qwen3.8 source configuration](https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json)
+  provides the dimensions used for these estimates; local pinned tensor
+  headers are authoritative for the build.
+
+### Other preserved components
+
+Embedding and untied output-head matrices each contain approximately
+248320 * 5120 weights; BF16-to-INT8 would theoretically save about 1.18 GiB
+per matrix before overhead. Leave both unchanged in these candidates:
+embedding lookup requires supported quantized storage/execution, while the
+output head directly affects token scores.
+
+Compressing or removing vision/MTP tensors may reduce disk size without
+material live VRAM savings when those components are already excluded from
+text-only/no-MTP serving. Small control tensors offer little savings relative
+to the large projections above.
+
+### Additional time
+
+The earlier 2–5 hour quantization estimate applies to the conservative build
+and is not a measured forecast for 400 targets. The expanded candidate adds
+a second source build, more GPTQ work, and its own runtime/evaluation passes.
+Measure its pilot; do not scale time simply by 400/256 because matrix sizes,
+Hessian costs, loading, and serialization differ. Reuse frozen data and
+evaluation setup. For 20 agent tasks at a 30-minute cap, one additional
+candidate alone adds up to 10 hours of task runtime, excluding setup.
+
 ## Calibration sources
 
 Proposed token-weighted mixture; these proportions are an experimental
@@ -185,7 +306,7 @@ it, results compare two quants and do not establish BF16 quality retention.
 
 | Stage | Evaluation | Initial scope | Measurements |
 | --- | --- | --- | --- |
-| 0 | Integrity/native dispatch | Existing full checkpoint gates | Shards, metadata, 256 targets, preserved hashes, processors, CUTLASS dispatch |
+| 0 | Integrity/native dispatch | Existing full checkpoint gates | Shards, metadata, candidate-specific 256/400 target manifest, preserved hashes, processors, CUTLASS dispatch |
 | 1 | MultiPL-E HumanEval Rust | Full Rust split at pinned revision | Compile rate, pass@1, runtime errors, generation time |
 | 1 | EvalPlus HumanEval+ | Full pinned suite | pass@1; broader Python coding regression |
 | 1 optional | EvalPlus MBPP+ | After primary function results | pass@1 |
@@ -252,8 +373,8 @@ the first comparative run.
 5. GPTQ sensitivity: a small dampening/ordering experiment only after checking
    installed LLM Compressor support. Record each change explicitly.
 6. Chunked-prefill size, graph memory, and KV allocation for TTFT/capacity.
-7. Recurrent/GDN projection quantization only as a separate future checkpoint
-   with its own quality tests; do not fold it into this initial v2.
+7. Recurrent/GDN projection quantization as the separate v2-expanded candidate
+   specified above, with its own target manifest and matched quality tests.
 8. ASR co-residency as a separate workload if later desired; do not assume
    full-window capacity and spare-GPU memory can both be retained.
 
