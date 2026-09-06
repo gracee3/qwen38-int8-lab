@@ -1,0 +1,121 @@
+schema_version: 2
+
+model:
+  source: /models/source
+  output: /models/Qwen3.8-27B-W8A8-INT8-Agentic-v2
+  architecture: Qwen3_5ForConditionalGeneration
+  model_type: qwen3_5
+  dtype: bfloat16
+  local_files_only: true
+  trust_remote_code: false
+  expected:
+    shards: 18
+    tensors: 1199
+    text_layers: 64
+    vision_layers: 27
+    mtp_layers: 1
+
+policy:
+  target: Linear
+  ignore:
+    - lm_head
+    - "re:.*visual.*"
+    - "re:.*linear_attn.*"
+    - "re:^mtp\\..*"
+  preserve:
+    embeddings:
+      patterns: ["model.language_model.embed_tokens"]
+      reason: Large vocabulary embeddings are accuracy-sensitive.
+    lm_head:
+      patterns: ["lm_head"]
+      reason: Preserve logits quality.
+    normalization:
+      patterns: ["re:.*norm.*"]
+      reason: Norms are not Linear; zero-centered RMSNorm.
+    vision:
+      patterns: ["re:.*visual.*"]
+      reason: Vision tower excluded for text-inference checkpoint.
+    mtp:
+      patterns: ["re:^mtp\\..*"]
+      reason: MTP tensors copied back byte-for-byte.
+    recurrent_gdn:
+      patterns: ["re:.*linear_attn.*"]
+      reason: Preserve GDN projections, convolution, recurrent params.
+
+quantization:
+  modifier: GPTQModifier
+  scheme: W8A8
+  weights: int8_per_channel
+  input_activations: int8_dynamic_per_token
+  block_size: 128
+  dampening_frac: 0.01
+  pipeline: sequential
+  sequential_targets: [Qwen3_5DecoderLayer]
+  smoothquant:
+    enabled: false
+    reason: Not validated for Qwen3.8 zero-centered RMSNorm/GDN.
+  serialization: compressed-tensors
+  serialization_max_shard_size: 1GB
+
+calibration:
+  seed: 42
+  cache_dir: /work/cache/huggingface/datasets
+  corpus_dir: /work/calibration/agentic-v2
+  target_total_tokens: 1500000
+  acceptable_range: [1300000, 1700000]
+  length_allocation:
+    short:
+      range: [2048, 4096]
+      share: 0.75
+    long:
+      range: [8192, 16384]
+      share: 0.25
+  sources:
+    - name: CoderForge
+      repo: togethercomputer/CoderForge-Preview
+      revision: null
+      split: null
+      token_share: 0.35
+      target_tokens: 525000
+    - name: Nemotron-Terminal
+      repo: nvidia/Nemotron-Terminal-Corpus
+      revision: null
+      split: null
+      token_share: 0.30
+      target_tokens: 450000
+    - name: Strandset-Rust
+      repo: Fortytwo-Network/Strandset-Rust-v1
+      revision: null
+      split: null
+      token_share: 0.25
+      target_tokens: 375000
+    - name: Nemotron-Agentic
+      repo: nvidia/Nemotron-Agentic-v1
+      revision: null
+      split: null
+      token_share: 0.10
+      target_tokens: 150000
+  profiles:
+    preflight:
+      description: Tokenize and validate the full mixture without model load
+      max_seq_length: 16384
+    small:
+      description: 32-sample x 512-token scaling candidate
+      num_samples: 32
+      max_seq_length: 512
+    quality:
+      description: Full 1.3M-1.7M token agentic mixture
+      num_samples: null
+      max_seq_length: 16384
+
+memory:
+  loading: auto_offload
+  max_cpu_gib: 80
+  offload_dir: /work/scratch/offload
+  compression_device: cuda:0
+
+safety:
+  refuse_existing_output: true
+  require_complete_source_index: true
+  require_mtp_reinjection: true
+  full_run_requires_flag: true

@@ -56,6 +56,13 @@ quant-tiny:
 dataset-preflight profile="quality":
     mkdir -p "{{work_root}}/results"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b.yaml --profile "{{profile}}" --dataset-preflight-only
 
+# Agentic W8A8 v2: multi-source calibration corpus preparation (no GPU needed)
+v2-calibration-prep:
+    mkdir -p "{{work_root}}/calibration/agentic-v2" "{{work_root}}/logs"; log="{{work_root}}/logs/v2-cal-prep-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "v2 calibration prep log: $log"; docker run --rm --ipc=host --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/prepare_v2_calibration.py --config /app/quant/config/qwen38-27b-v2.yaml --profile preflight 2>&1 | tee "$log"
+
+v2-calibration-prep-dry:
+    docker run --rm --ipc=host --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -w /app "{{quant_image}}" python /app/quant/scripts/prepare_v2_calibration.py --config /app/quant/config/qwen38-27b-v2.yaml --dry-run
+
 quant-real profile output:
     mkdir -p "{{work_root}}/logs" "{{work_root}}/results" "{{work_root}}/scratch"; log="{{work_root}}/logs/quant-{{profile}}-$(date -u +%Y%m%dT%H%M%SZ).log"; echo "quant log: $log"; docker run --rm --gpus all --ipc=host --mount type=bind,src="{{model_root}}",dst=/models --mount type=bind,src="{{source_model}}",dst=/models/source,readonly --mount type=bind,src="{{work_root}}",dst=/work --mount type=bind,src="{{repo_root}}",dst=/app,readonly -e HF_HOME=/work/cache/huggingface -e HF_DATASETS_CACHE=/work/cache/huggingface/datasets -e GIT_COMMIT="$(git -C "{{repo_root}}" rev-parse HEAD)" -w /app "{{quant_image}}" python /app/quant/scripts/quantize.py --config /app/quant/config/qwen38-27b.yaml --profile "{{profile}}" --output "{{output}}" --execute-full 2>&1 | tee "$log"
 
