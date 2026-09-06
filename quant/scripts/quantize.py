@@ -316,7 +316,8 @@ class PeakMonitor:
         }
 
 
-def ensure_gpus(minimum: int = 2) -> dict[str, Any]:
+def ensure_gpus(minimum: int = 1) -> dict[str, Any]:
+    """Sequential GPTQ needs one visible SM86 GPU, not the whole host pair."""
     import torch
 
     count = torch.cuda.device_count()
