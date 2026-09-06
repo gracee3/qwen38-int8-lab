@@ -1,0 +1,93 @@
+schema_version: 1
+
+model:
+  source: /models/source
+  revision: 1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0
+  output: /models/Qwen3.8-27B-W4A16-INT4-Expanded400-v1
+  architecture: Qwen3_5ForConditionalGeneration
+  model_type: qwen3_5
+  dtype: bfloat16
+  local_files_only: true
+  trust_remote_code: false
+  expected:
+    shards: 18
+    tensors: 1199
+    text_layers: 64
+    vision_layers: 27
+    mtp_layers: 1
+
+target_scope:
+  expected_logical_targets: 400
+  families:
+    - suffix: mlp.gate_proj
+      count: 64
+      shape: [17408, 5120]
+    - suffix: mlp.up_proj
+      count: 64
+      shape: [17408, 5120]
+    - suffix: mlp.down_proj
+      count: 64
+      shape: [5120, 17408]
+    - suffix: self_attn.q_proj
+      count: 16
+      shape: [12288, 5120]
+    - suffix: self_attn.k_proj
+      count: 16
+      shape: [1024, 5120]
+    - suffix: self_attn.v_proj
+      count: 16
+      shape: [1024, 5120]
+    - suffix: self_attn.o_proj
+      count: 16
+      shape: [5120, 6144]
+    - suffix: linear_attn.in_proj_qkv
+      count: 48
+      shape: [10240, 5120]
+    - suffix: linear_attn.in_proj_z
+      count: 48
+      shape: [6144, 5120]
+    - suffix: linear_attn.out_proj
+      count: 48
+      shape: [5120, 6144]
+
+quantization:
+  algorithm: calibrated_gptq
+  scheme: W4A16
+  weight_dtype: int4
+  weight_group_size: 128
+  activation_dtype: bfloat16
+  block_size: 128
+  dampening_frac: 0.01
+  desc_act: false
+  sequential_targets: [Qwen3_5DecoderLayer]
+  serialization: compressed-tensors
+  serialization_max_shard_size: 1GB
+  smoothquant: false
+
+calibration:
+  seed: 42
+  corpus_dir: /run-int4/calibration-final
+  target_total_tokens: 1500000
+  acceptable_range: [1300000, 1700000]
+  preparer: quant/scripts/prepare_int4_corpus.py
+  provenance: Separate candidate; existing v2 corpus fails provenance/composition gates.
+
+runtime:
+  tensor_parallel_size: 1
+  pipeline_parallel_size: 1
+  max_model_len: 32768
+  diagnostic_max_model_len: 16384
+  kv_cache_dtype: fp8
+  max_num_seqs: 1
+  enable_thinking: false
+  mtp: false
+  device_uuid: GPU-2b2f26e4-eb5d-dd9d-1dbd-2857fd357225
+
+safety:
+  min_mem_available_gib: 8
+  max_swap_growth_gib: 32
+  sustain_seconds: 10
+  source_read_only: true
+  refuse_existing_output: true
+  full_build_requires_storage_gate: true
+  full_build_requires_compatibility_pilot: true
