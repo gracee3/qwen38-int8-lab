@@ -703,11 +703,15 @@ def copy_processor_configs(source_dir: Path, output_dir: Path) -> dict[str, dict
 
 
 def run_full_model(
-    config: dict[str, Any], profile_name: str, profile: dict[str, Any], output_dir: Path
+    config: dict[str, Any], profile_name: str, profile: dict[str, Any], output_dir: Path,
+    resume: bool = False,
 ) -> dict[str, Any]:
     from llmcompressor import oneshot
+    from resume_checkpoint import Checkpoints, register_pipeline, run_identity
 
     source = Path(config["model"]["source"])
+    if config["quantization"]["pipeline"] != "sequential":
+        raise ValueError("Resumable GPTQ requires the sequential pipeline")
     if output_dir.exists():
         raise FileExistsError(f"Refusing to overwrite existing output: {output_dir}")
     staging = output_dir.with_name(f".{output_dir.name}.incomplete-{utc_stamp()}")
@@ -715,6 +719,12 @@ def run_full_model(
         raise FileExistsError(staging)
     model, tokenizer, dataset, shared = load_real_inputs(config, profile)
     modifier = make_modifier(config["quantization"], config["policy"])
+    checkpoint_dir = output_dir.with_name(f".{output_dir.name}.resume")
+    checkpoint_identity = run_identity(source, dataset, {
+        "config": config, "profile": profile, "entrypoint_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+    })
+    checkpoints = Checkpoints(checkpoint_dir, checkpoint_identity, resume=resume)
+    pipeline = register_pipeline(checkpoints)
     started = time.monotonic()
     oneshot(
         model=model,
@@ -723,7 +733,7 @@ def run_full_model(
         recipe=[modifier],
         max_seq_length=profile["max_seq_length"],
         num_calibration_samples=profile["num_samples"],
-        pipeline=config["quantization"]["pipeline"],
+        pipeline=pipeline,
         sequential_targets=config["quantization"]["sequential_targets"],
     )
     staging.mkdir(parents=True, exist_ok=False)
@@ -751,6 +761,8 @@ def run_full_model(
     return {
         "elapsed_seconds": time.monotonic() - started,
         "output_dir": str(output_dir),
+        "checkpoint_dir": str(checkpoint_dir),
+        "resumed": resume,
         "artifact_kind": (
             "qwen38_27b_w8a8_quality_candidate"
             if profile_name == "quality"
@@ -781,6 +793,7 @@ def main() -> int:
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--execute-full", action="store_true", help="Required safety acknowledgement for non-synthetic work")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--resume", action="store_true", help="Resume the matching durable calibration checkpoint")
     parser.add_argument("--load-trace-only", action="store_true")
     parser.add_argument("--dataset-preflight-only", action="store_true")
     args = parser.parse_args()
@@ -889,7 +902,7 @@ def main() -> int:
             elif synthetic:
                 run = run_synthetic_smoke(config, profile, output)
             else:
-                run = run_full_model(config, args.profile, profile, output)
+                run = run_full_model(config, args.profile, profile, output, resume=args.resume)
             status = "passed"
         except BaseException as exc:
             if isinstance(exc, KeyboardInterrupt) and monitor.safety_trigger:
