@@ -19,7 +19,9 @@ readonly PROTECTED_SERIAL=S7KHNU0X722442H
 readonly MIN_MEM_KIB=$((80 * 1024 * 1024))
 readonly STOP_MEM_KIB=$((8 * 1024 * 1024))
 readonly MIN_DISK_BYTES=$((100 * 1024 * 1024 * 1024))
-readonly MAX_SWAP_GROWTH_KIB=$((4 * 1024 * 1024))
+readonly MAX_SWAP_GROWTH_GIB=${MAX_SWAP_GROWTH_GIB:-32}
+[[ ${MAX_SWAP_GROWTH_GIB} =~ ^[1-9][0-9]{0,3}$ ]] || { printf 'error=invalid_max_swap_growth_gib\n' >&2; exit 77; }
+readonly MAX_SWAP_GROWTH_KIB=$((MAX_SWAP_GROWTH_GIB * 1024 * 1024))
 CONTEXT_LENGTH=$(python3 - "${SUITE_CONFIG}" <<'PY'
 import sys, yaml
 with open(sys.argv[1], encoding="utf-8") as handle:
@@ -307,7 +309,7 @@ run_guarded_command() {
             trigger=mem_available_below_8_gib
         fi
         if (( swap_growth > MAX_SWAP_GROWTH_KIB )); then breach=$((breach + 1)); else breach=0; fi
-        if (( breach >= 5 )); then trigger=swap_growth_over_4_gib_for_10_seconds; fi
+        if (( breach >= 5 )); then trigger="swap_growth_over_${MAX_SWAP_GROWTH_GIB}_gib_for_10_seconds"; fi
         if [[ -n ${trigger} ]]; then
             FAILURE_REASON=${trigger}
             docker stop --time 30 "${CURRENT_CONTAINER}" >/dev/null 2>&1 || true

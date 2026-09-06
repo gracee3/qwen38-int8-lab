@@ -125,6 +125,25 @@ def resolve_policy(model_path: Path, policy: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+class ResourceSafetyError(RuntimeError):
+    """A configured host resource guard stopped the run."""
+
+
+def resource_abort_limits(config: dict[str, Any]) -> dict[str, int]:
+    safety = config.get("safety", {})
+    limits = {}
+    for name, default, target, factor in (
+        ("min_mem_available_gib", 8, "min_mem_available_bytes", 1024**3),
+        ("max_swap_growth_gib", 32, "max_swap_growth_bytes", 1024**3),
+        ("sustain_seconds", 10, "sustain_seconds", 1),
+    ):
+        value = safety.get(name, default)
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError(f"safety.{name} must be a positive integer")
+        limits[target] = value * factor
+    return limits
+
+
 class PeakMonitor:
     def __init__(self, interval: float = 0.5, abort_limits: dict[str, int] | None = None) -> None:
         self.interval = interval
@@ -244,6 +263,7 @@ class PeakMonitor:
                             f"MemAvailable={mem_available}, "
                             f"swap_growth={swap_used - self.initial_swap_used_bytes}"
                         )
+                        print(f"RESOURCE_SAFETY_ABORT: {self.safety_trigger}", file=sys.stderr, flush=True)
                         os.kill(os.getpid(), signal.SIGINT)
                         return
                 else:
@@ -846,11 +866,8 @@ def main() -> int:
         )
     metadata_path = Path("/work/results") / f"quant-{args.profile}-{stamp}.json"
     status = "failed"
-    abort_limits = None if synthetic or args.load_trace_only else {
-        "min_mem_available_bytes": 8 * 1024**3,
-        "max_swap_growth_bytes": 4 * 1024**3,
-        "sustain_seconds": 10,
-    }
+    abort_limits = None if synthetic or args.load_trace_only else resource_abort_limits(config)
+    base_metadata["resource_abort_limits"] = abort_limits
     with PeakMonitor(abort_limits=abort_limits) as monitor:
         try:
             if args.load_trace_only:
@@ -875,6 +892,9 @@ def main() -> int:
                 run = run_full_model(config, args.profile, profile, output)
             status = "passed"
         except BaseException as exc:
+            if isinstance(exc, KeyboardInterrupt) and monitor.safety_trigger:
+                base_metadata["error"] = f"ResourceSafetyError: {monitor.safety_trigger}"
+                raise ResourceSafetyError(monitor.safety_trigger) from None
             base_metadata["error"] = f"{type(exc).__name__}: {exc}"
             raise
         finally:

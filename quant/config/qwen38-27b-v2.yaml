@@ -117,6 +117,9 @@ memory:
   compression_device: cuda:0
 
 safety:
+  min_mem_available_gib: 8
+  max_swap_growth_gib: 32
+  sustain_seconds: 10
   refuse_existing_output: true
   require_complete_source_index: true
   require_mtp_reinjection: true
