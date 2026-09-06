@@ -73,12 +73,14 @@ calibration:
   sources:
     - name: CoderForge
       repo: togethercomputer/CoderForge-Preview
+      config: trajectories
       revision: null
       split: null
       token_share: 0.35
       target_tokens: 525000
     - name: Nemotron-Terminal
       repo: nvidia/Nemotron-Terminal-Corpus
+      config: skill_based_mixed
       revision: null
       split: null
       token_share: 0.30

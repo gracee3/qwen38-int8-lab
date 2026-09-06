@@ -42,10 +42,11 @@ def read_yaml(path: Path) -> dict[str, Any]:
 class SourceSpec:
     name: str
     repo: str
-    revision: str | None
-    split: str | None
-    token_share: float
-    target_tokens: int
+    config: str | None = None
+    revision: str | None = None
+    split: str | None = None
+    token_share: float = 0.0
+    target_tokens: int = 0
 
 
 @dataclass
@@ -64,7 +65,7 @@ class SourceResult:
 
 
 def load_source_dataset(spec: SourceSpec, cache_dir: str):
-    """Load a single HuggingFace dataset with pinned revision/split."""
+    """Load a single HuggingFace dataset with pinned config/revision/split."""
     from datasets import load_dataset
 
     kwargs: dict[str, Any] = {"cache_dir": cache_dir}
@@ -73,9 +74,9 @@ def load_source_dataset(spec: SourceSpec, cache_dir: str):
     if spec.split:
         kwargs["split"] = spec.split
 
-    print(f"  Loading {spec.repo} (revision={spec.revision}, split={spec.split})...")
+    print(f"  Loading {spec.repo} (config={spec.config}, revision={spec.revision}, split={spec.split})...")
     started = time.monotonic()
-    dataset = load_dataset(spec.repo, **kwargs)
+    dataset = load_dataset(spec.repo, spec.config, **kwargs)
 
     if spec.split is None:
         if isinstance(dataset, dict):
@@ -216,6 +217,7 @@ def main() -> None:
         spec = SourceSpec(
             name=src_cfg["name"],
             repo=src_cfg["repo"],
+            config=src_cfg.get("config"),
             revision=src_cfg.get("revision"),
             split=src_cfg.get("split"),
             token_share=src_cfg["token_share"],
