@@ -224,14 +224,14 @@ As of 2026-09-01:
 - A former full-group attempt exhausted GPU memory while producing prompt log-probabilities. The candidate-only retry therefore uses text-only loading, chunked prefill, and an explicit bounded KV allocation, with the suite maximum executed as a mandatory runtime gate before smoke.
 - The revised preflight, 12,314-token runtime log-likelihood gate, and limited W8A8 smoke passed. MMLU-Pro was manually paused at 5,811/113,990 requests to prioritize interactive inference; there is no reportable accuracy score, and later resumption restarts that group from zero.
 - Loopback-only vLLM trials validated the 64K BF16 default and experimental 160K FP8 profile. Native Rust Goose and standalone Qwen Code both completed real local tool calls. Qwen Code fits the larger window but spends roughly 10K tokens on its fresh built-in prompt/tool envelope; Goose remains the lower-overhead interactive option. The trial server was stopped cleanly after validation.
-- The default serving profile is now TP2 / FP8 KV / 262,144-token context / no MTP, matching the working host configuration. The agentic W8A8 v2 recipe is captured in `AGENTIC-W8A8-V2.md` as the next checkpoint build specification.
+- The default serving profile is now TP2 / FP8 KV / 262,144-token context / no MTP, matching the working host configuration. The agentic W8A8 v2 checkpoint has now completed and passed structural, preservation, and 16K TP2 vLLM smoke validation; see [`reports/agentic-w8a8-v2-quantized-2026-09-06.md`](reports/agentic-w8a8-v2-quantized-2026-09-06.md). This is a checkpoint milestone, not an accuracy claim.
 
 See `reports/smoke-test-2026-08-24.md` for the measured gates and remaining boundary.
 See `reports/evaluation-and-agent-status-2026-08-29.md` for the complete attempt ledger, dataset map, agent results, public W8A8 comparison, and next evaluation ladder.
 
 ## Next steps
 
-The immediate next milestone is the **agentic W8A8 v2 checkpoint** specified in [`AGENTIC-W8A8-V2.md`](AGENTIC-W8A8-V2.md). It rebuilds from the original BF16 source with a new GPTQ calibration corpus (CoderForge, Nemotron-Terminal, Strandset-Rust, Nemotron-Agentic), retains the established 256-projection quantized layer policy, and targets the same TP2 / FP8 KV / no-MTP / 262,144-token serving profile. An optional expanded candidate adds 144 recurrent projections for an estimated 5.16 GiB additional savings.
+The immediate next milestone is the **agentic W8A8 v2 evaluation pass** documented in [`reports/agentic-w8a8-v2-quantized-2026-09-06.md`](reports/agentic-w8a8-v2-quantized-2026-09-06.md): paired quality comparison, Qwen Code tool-call validation, and 262K context retrieval/soak tests. An optional expanded INT4 candidate remains a separate experiment and should run only when both GPUs and the host memory budget are available.
 
 The standardized accuracy run remains available as a parallel track: stop the interactive vLLM server so the evaluator has exclusive use of both GPUs, use the exact merged `main` commit, and launch `just eval-candidate-only <exact-main-commit>` in its labeled tmux session. The scored group order is MMLU-Pro from zero, followed by BBH, GPQA, MATH Level 5, IFEval, and MuSR.
 
