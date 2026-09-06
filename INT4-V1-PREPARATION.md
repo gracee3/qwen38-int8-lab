@@ -41,7 +41,9 @@ FP8 KV quality, 32K capacity, task quality, or soak stability.
 
 ## Safe explicit stages
 
-Use this worktree at `/home/emmy/workspace/qwen38-int4-v1`:
+Use the integrated worktree at `/home/emmy/workspace/qwen38-int4-resume-integration`
+after reviewing the shared-policy integration. The original agent worktree at
+`/home/emmy/workspace/qwen38-int4-v1` is unchanged and does not yet use this policy:
 
 ```bash
 python3 quant/scripts/int4_readiness.py /data/qwen38-int8-lab/int4-v1
@@ -67,13 +69,30 @@ The runtime profiler permits trusted local callback serialization only inside
 its network-disabled diagnostic container; it is not a serving configuration.
 
 The real-source pilot requires at least 80 GiB available host RAM, no existing
-GPU compute process, 64 GiB free disk, and the protected disk remaining read-only
-and unmounted. It has an 84 GiB container memory ceiling and no container swap.
+GPU compute process, at least 96 GiB free disk for another rolling snapshot, and
+the protected disk remaining read-only and unmounted. This disk floor is not
+a complete run-fit guarantee: live snapshot storage plus an 8 GiB reserve is
+checked at every save, and final export needs additional space. The real pilot
+and full build now match INT8's shared host memory policy: 8 GiB available-RAM
+floor, 32 GiB maximum swap growth, sustained for ten seconds. They no longer
+have an earlier 84 GiB/no-swap cgroup limit. They use the same exclusive quant
+lock and swappiness wrapper; with the persistent host setting installed, the
+wrapper leaves swappiness at 1 after the run. Small stages remain bounded.
 It selects four short samples and the longest actual finalized sequence and
 uses the existing sequential/offload loader. It writes a separately marked
 experimental checkpoint, verifies packed metadata and preserved tensor bytes,
 then atomically renames the completed staging directory. Neither real pilot
 nor full build was exercised while INT8 v2 was running.
+
+Both real-source modes now save durable calibration state about every 20% of
+sequential stages. Use `bash scripts/int4_prepare.sh real-pilot --resume` or
+`bash scripts/int4_prepare.sh full --resume` to retry the same output with the
+same source, corpus, recipe and code. Full-build pilot/overlap gates still apply
+on every retry. A prior run without these snapshots cannot be resumed.
+The shared adapter passed CPU-offloaded BF16 synthetic W4A16 interruption/resume
+tests with all 127 final state tensors exactly equal to an uninterrupted run;
+this is not validation of a real 27B CUDA resume or the completed INT4 artifact.
+See `reports/resumable-quant-2026-09-06.md` for retention and disk tradeoffs.
 
 `full` additionally requires matching successful real-pilot and reviewed
 held-out overlap reports. Its only allowed final destination is

@@ -84,6 +84,9 @@ runtime:
   device_uuid: GPU-2b2f26e4-eb5d-dd9d-1dbd-2857fd357225
 
 safety:
+  min_mem_available_gib: 8
+  max_swap_growth_gib: 32
+  sustain_seconds: 10
   source_read_only: true
   refuse_existing_output: true
   full_build_requires_storage_gate: true

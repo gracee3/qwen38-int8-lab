@@ -6,7 +6,8 @@ import json
 import subprocess
 from pathlib import Path
 
-from quantize import PeakMonitor, load_real_inputs, inject_mtp_tensors, copy_processor_configs, package_versions, utc_stamp, git_revision
+from quantize import PeakMonitor, ResourceSafetyError, resource_abort_limits, load_real_inputs, inject_mtp_tensors, copy_processor_configs, package_versions, utc_stamp, git_revision
+from resume_checkpoint import Checkpoints, register_pipeline, run_identity
 from validate_int4 import validate
 
 
@@ -34,6 +35,7 @@ def main():
     p.add_argument('--corpus',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--full',action='store_true')
+    p.add_argument('--resume',action='store_true',help='Resume the matching durable calibration snapshot')
     p.add_argument('--real-pilot-report',type=Path)
     p.add_argument('--overlap-report',type=Path)
     p.add_argument('--runtime-report',type=Path,required=True)
@@ -84,6 +86,9 @@ def main():
     dataset=dataset.select(indices).select_columns(['input_ids','attention_mask'])
     profile={'num_samples':len(dataset),'max_seq_length':max(len(row['input_ids']) for row in dataset)}
     config={'model':{'source':str(a.source)},'memory':{'offload_dir':'/run-int4/offload','max_cpu_gib':80},'calibration':{'corpus_dir':str(a.corpus),'sources':corpus['sources'],'seed':42}}
+    import yaml
+    recipe_path=Path(__file__).resolve().parents[1]/'config/qwen38-27b-int4-expanded400-v1.yaml'
+    config['safety']=yaml.safe_load(recipe_path.read_text())['safety']
     # Reuse the proven source loader, then replace its selected inputs with the
     # explicit short+long pilot selection. The active INT8 implementation is untouched.
     stamp=utc_stamp(); staging=a.output.with_name('.'+a.output.name+'.incomplete-'+stamp)
@@ -91,7 +96,11 @@ def main():
     result['git_commit']=git_revision()
     result['source_revision']=audit['source']['revision']
     result['recipe']={'bits':4,'group_size':128,'symmetric':True,'activation_dtype':'bfloat16','actorder':None,'block_size':128,'dampening_frac':.01,'sequential_targets':['Qwen3_5DecoderLayer']}
-    with PeakMonitor(abort_limits={'min_mem_available_bytes':8*1024**3,'max_swap_growth_bytes':4*1024**3,'sustain_seconds':10}) as monitor:
+    checkpoint_dir=a.output.with_name('.'+a.output.name+'.resume')
+    result['checkpoint_dir']=str(checkpoint_dir)
+    result['resumed']=a.resume
+    result['resource_abort_limits']=resource_abort_limits(config)
+    with PeakMonitor(abort_limits=resource_abort_limits(config)) as monitor:
         try:
             model,tokenizer,_,shared=load_real_inputs(config,profile)
             names=[t['name'] for t in audit['targets']]
@@ -99,7 +108,11 @@ def main():
             for t in audit['targets']:
                 assert list(modules[t['name']].weight.shape)==t['shape'],t['name']
             modifier=GPTQModifier(targets=names,scheme='W4A16',block_size=128,dampening_frac=.01,actorder=None)
-            oneshot(model=model,processor=tokenizer,dataset=dataset,recipe=[modifier],max_seq_length=profile['max_seq_length'],num_calibration_samples=len(dataset),pipeline='sequential',sequential_targets=['Qwen3_5DecoderLayer'])
+            identity=run_identity(a.source,dataset,{'recipe':result['recipe'],'targets':names,
+                'config':config,'profile':profile,'entrypoint_sha256':file_hash(Path(__file__)),
+                'loader_sha256':file_hash(Path(__file__).with_name('quantize.py'))})
+            pipeline=register_pipeline(Checkpoints(checkpoint_dir,identity,resume=a.resume))
+            oneshot(model=model,processor=tokenizer,dataset=dataset,recipe=[modifier],max_seq_length=profile['max_seq_length'],num_calibration_samples=len(dataset),pipeline=pipeline,sequential_targets=['Qwen3_5DecoderLayer'])
             staging.mkdir(exist_ok=False)
             model.save_pretrained(staging,save_compressed=True,safe_serialization=True,max_shard_size='1GB')
             tokenizer.save_pretrained(staging)
@@ -110,6 +123,15 @@ def main():
                 (staging/'EXPERIMENTAL_NON_PRODUCTION.json').write_text(json.dumps({'profile':result['profile'],'production_authorized':False})+'\n')
             staging.rename(a.output)
             result['status']='passed'
+        except KeyboardInterrupt:
+            if monitor.safety_trigger:
+                result['error']='ResourceSafetyError: '+monitor.safety_trigger
+                raise ResourceSafetyError(monitor.safety_trigger) from None
+            result['error']='External KeyboardInterrupt'
+            raise
+        except Exception as exc:
+            result['error']=type(exc).__name__+': '+str(exc)
+            raise
         finally:
             result['peaks']=monitor.report()
             a.output.parent.mkdir(parents=True,exist_ok=True)

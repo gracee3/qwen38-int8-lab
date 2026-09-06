@@ -5,7 +5,7 @@ import json
 import re
 from pathlib import Path
 
-from quantize import synthetic_config, PeakMonitor
+from quantize import synthetic_config, PeakMonitor, resource_abort_limits
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
     dataset = Dataset.from_list([{'input_ids': [2 + (i*17+j)%478 for j in range(128)], 'attention_mask':[1]*128} for i in range(4)])
     modifier = GPTQModifier(targets=targets, scheme='W4A16', block_size=128, dampening_frac=0.01, actorder=None)
     print('stage=synthetic_gptq targets=25 dtype=bfloat16 group=128 actorder=None', flush=True)
-    with PeakMonitor(abort_limits={'min_mem_available_bytes': 8*1024**3, 'max_swap_growth_bytes':4*1024**3, 'sustain_seconds':10}) as monitor:
+    with PeakMonitor(abort_limits=resource_abort_limits({})) as monitor:
         oneshot(model=model, processor=tokenizer, dataset=dataset, recipe=[modifier], max_seq_length=128, num_calibration_samples=4, pipeline='sequential', sequential_targets=['Qwen3_5DecoderLayer'])
         for name, old in preserved.items():
             assert torch.equal(old, model.state_dict()[name].cpu()), name
