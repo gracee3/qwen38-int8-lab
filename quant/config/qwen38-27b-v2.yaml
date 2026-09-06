@@ -88,13 +88,13 @@ calibration:
     - name: Strandset-Rust
       repo: Fortytwo-Network/Strandset-Rust-v1
       revision: null
-      split: null
+      split: train
       token_share: 0.25
       target_tokens: 375000
     - name: Nemotron-Agentic
       repo: nvidia/Nemotron-Agentic-v1
       revision: null
-      split: null
+      split: interactive_agent
       token_share: 0.10
       target_tokens: 150000
   profiles:

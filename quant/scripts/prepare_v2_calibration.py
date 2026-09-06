@@ -137,6 +137,15 @@ def extract_text(row: dict[str, Any]) -> str | None:
                 parts.append(f"{role}: {value}")
         return "\n".join(parts) if parts else None
 
+    # Strandset-Rust style: input_data / output_data fields
+    input_data = row.get("input_data")
+    if input_data and isinstance(input_data, str) and input_data.strip():
+        parts = [input_data]
+        output_data = row.get("output_data")
+        if output_data and isinstance(output_data, str) and output_data.strip():
+            parts.append(output_data)
+        return "\n".join(parts)
+
     return None
 
 
