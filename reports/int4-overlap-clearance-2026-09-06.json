@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "corpus_sha256": "f30e029e118eb337a724f44d279994915db43dbddaaab4ade6227a148b4fe107",
+  "heldout_manifest_sha256": "a9f27d69619ba76229fa663e3f7bca20959116de5174c90f2cbaa15565883278",
+  "unresolved_overlaps": 0,
+  "screened_cases": 881,
+  "selected_calibration_rows": 423,
+  "excluded_task_ids": [
+    "850f945938c57a4329eee2c53d7ef5eee3721f1ee9d39574564e0328f173f195"
+  ],
+  "evidence_sha256": {
+    "overlap-final-public.json": "25f24a6bfa070f0193b55e5b23c20d8ecac59f1a3bc436222e9bc8b427745b9e",
+    "overlap-final-agents.json": "54befbb31c7dd38bd08729e8e65d62af471ccd8f4cfb410e264769fa3731a0f0",
+    "origin-final-schema.json": "eb0fc50a48c2f509f4bbd27aab939ff5c92b9cbaa2c1cf76d9e7864087d15dc7"
+  },
+  "scope": "exact text, normalized task identities and >=50% word-5-shingle containment (>=8 shared shingles) of prompts, available canonical code/tests and repository patches; reviewed origin metadata; final selection follows frozen fixtures",
+  "limitations": [
+    "A negative lexical/identity screen cannot guarantee absence of every semantic transformation.",
+    "Benchmark environments have not been executed; suite execution prerequisites remain an evaluation gate."
+  ]
+}
