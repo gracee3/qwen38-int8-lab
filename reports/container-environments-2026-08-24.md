@@ -24,7 +24,7 @@ Direct compatibility contract:
 - Safetensors 0.8.0
 - Hugging Face Hub 1.28.0
 
-LLM Compressor 0.13.0 constrains Transformers to 5.14.1 and compressed-tensors to 0.18.0. The complete resolver result is `docker/quant/requirements.lock`.
+LLM Compressor 0.13.0 constrains Transformers to 5.14.1 and compressed-tensors to 0.18.0. The complete resolver result is `environments/quant/requirements.lock`.
 
 ## Inference image
 
@@ -35,6 +35,6 @@ Direct compatibility contract:
 - Transformers 5.15.1 (resolved by vLLM)
 - compressed-tensors 0.17.0
 
-The precompiled PyPI release reuses the already-cached PyTorch/CUDA base. It avoids a separate pull of the substantially larger official serving image while retaining the release's compiled CUDA extensions. The complete resolver result is `docker/vllm/requirements.lock`.
+The precompiled PyPI release reuses the already-cached PyTorch/CUDA base. It avoids a separate pull of the substantially larger official serving image while retaining the release's compiled CUDA extensions. The complete resolver result is `environments/serving/requirements.lock`.
 
 The environments intentionally remain separate because their tested compressed-tensors versions differ. Cross-version checkpoint compatibility still requires validation with the completed artifact.

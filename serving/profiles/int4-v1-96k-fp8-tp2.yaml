@@ -1,0 +1,45 @@
+schema_version: 1
+id: int4-v1-96k-fp8-tp2
+model_id: int4-v1
+recipe: int4-expanded400-v1
+checkpoint_name: Qwen3.8-27B-W4A16-INT4-Expanded400-v1
+image: serving-fp8-sm86
+hardware:
+  gpu_count: 2
+  gpu_memory_gib: 24
+  compute_capability: '8.6'
+runtime:
+  tensor_parallel_size: 2
+  max_model_len: 98304
+  kv_cache_memory_bytes: 3758096384
+  kv_cache_dtype: fp8
+  enforce_eager: false
+  language_model_only: true
+  max_num_batched_tokens: 2048
+  max_num_seqs: 1
+  dtype: bfloat16
+  pipeline_parallel_size: 1
+  cpu_offload_gb: 0
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  speculative_decoding: false
+generation:
+  seed: 42
+  enable_thinking: false
+  generation_config: vllm
+server:
+  served_model_name: qwen38-int4-v1-fp8-tp2
+  enable_auto_tool_choice: true
+  tool_call_parser: qwen3_xml
+  request_logging: false
+environment:
+  VLLM_USE_FLASHINFER_SAMPLER: '0'
+evidence:
+  status: validated_dual_gpu_single_sequence
+  reports:
+  - reports/int4-v1-inference-profiles-2026-09-07.md
+  origin:
+    repository: gracee3/qwen38-lab
+    commit: 52de78d4c7fc2672a118802e02f742b701f02b37
+    path: inference/config/int4-v1-tp2-96k.yaml
+  required_log_evidence: {}

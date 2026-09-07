@@ -12,9 +12,9 @@ weights, and host-private paths remain outside Git.
 
 The reproducible native presets are:
 
-- `inference/config/int4-v1-tp1-16k-scored.yaml`: TP1 on GPU 0, 16K context,
+- `serving/profiles/int4-v1-16k-fp8-tp1.yaml`: TP1 on GPU 0, 16K context,
   FP8 KV, 0.75 GiB KV reservation, eager execution.
-- `inference/config/int8-v2-16k-scored.yaml`: TP2 across both GPUs, 16K
+- `serving/profiles/int8-v2-16k-bf16-tp2.yaml`: TP2 across both GPUs, 16K
   context, BF16 KV, 0.75 GiB KV reservation, eager execution.
 
 Both use one sequence, non-thinking text-only loading, 1,024-token chunked

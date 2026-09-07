@@ -1,8 +1,13 @@
 """Run inside quant image, without GPUs: baseline, interrupt, fresh-process resume."""
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+
 import argparse
 from pathlib import Path
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'quant/scripts'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'quant'))
 import torch
 from datasets import Dataset
 from transformers import Qwen3_5ForConditionalGeneration, PreTrainedTokenizerFast
@@ -10,8 +15,8 @@ from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
 from llmcompressor import oneshot
 from llmcompressor.modifiers.quantization import GPTQModifier
-from quantize import synthetic_config
-from resume_checkpoint import Checkpoints, register_pipeline
+from quant.quantize import synthetic_config
+from quant.resume_checkpoint import Checkpoints, register_pipeline
 
 p = argparse.ArgumentParser()
 p.add_argument('stage', choices=['baseline', 'interrupt', 'resume', 'compare'])

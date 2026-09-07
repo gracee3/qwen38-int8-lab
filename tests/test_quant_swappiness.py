@@ -7,7 +7,7 @@ import tempfile
 import time
 import unittest
 
-WRAPPER = Path(__file__).resolve().parents[1] / "scripts/with_quant_swappiness.sh"
+WRAPPER = Path(__file__).resolve().parents[1] / "quant/with_quant_swappiness.sh"
 
 
 class SwappinessTests(unittest.TestCase):

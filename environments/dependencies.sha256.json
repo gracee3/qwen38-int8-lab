@@ -1,0 +1,8 @@
+{
+  "environments/legacy-eval/requirements.in": "20b7406f8973eeb815097573577b0ce28e3b4f041fae969d62bbdd70eaeb40cf",
+  "environments/legacy-eval/requirements.lock": "45353c40934c5665074b37732fdff7fb52350d535f8b35e74dabfd96bcd88daf",
+  "environments/serving/requirements.in": "a62055cc1b97f6b680c9675f0009373121b0d00336114b5694f1a43017942259",
+  "environments/serving/requirements.lock": "c02152726b76487acb897ceb94a0a1f957583c17731a336f955da4f211c94724",
+  "environments/quant/requirements.in": "cac70453e34608a6d2c65eddc98ccf29892a92cf75fc84669b6e4583bfc75ccb",
+  "environments/quant/requirements.lock": "485a93ef70659eb1d9aa21ef8027122987a077f7ce0cddddf4b75e895da32313"
+}

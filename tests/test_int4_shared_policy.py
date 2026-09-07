@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class SharedPolicyTests(unittest.TestCase):
     def test_real_entrypoint_uses_shared_checkpoint_and_limits(self):
-        tree = ast.parse((ROOT / 'quant/scripts/quantize_int4.py').read_text())
+        tree = ast.parse((ROOT / 'quant/quantize_int4.py').read_text())
         calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
         names = {node.func.id for node in calls if isinstance(node.func, ast.Name)}
         self.assertTrue({'resource_abort_limits', 'Checkpoints', 'run_identity',
@@ -21,12 +21,12 @@ class SharedPolicyTests(unittest.TestCase):
         self.assertEqual(pipeline.id, 'pipeline')
 
     def test_resume_rejected_before_launch_for_small_stage(self):
-        result = subprocess.run(['bash', str(ROOT / 'scripts/int4_prepare.sh'),
+        result = subprocess.run(['bash', str(ROOT / 'quant/int4.sh'),
                                  'synthetic', '--resume'], capture_output=True, text=True)
         self.assertEqual(result.returncode, 2)
         self.assertIn('--resume requires real-pilot or full', result.stderr)
 
     def test_unknown_option_rejected_before_launch(self):
-        result = subprocess.run(['bash', str(ROOT / 'scripts/int4_prepare.sh'),
+        result = subprocess.run(['bash', str(ROOT / 'quant/int4.sh'),
                                  'full', '--invalid'], capture_output=True, text=True)
         self.assertEqual(result.returncode, 2)
