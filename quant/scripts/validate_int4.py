@@ -5,6 +5,7 @@ import array
 import hashlib
 import json
 import math
+import re
 import struct
 import sys
 from pathlib import Path
@@ -45,6 +46,25 @@ def tensor_bytes(entry):
     return raw
 
 
+def offset_norm_roundtrip(name, source, output):
+    """Exact llmcompressor 0.13 CalibrationOffsetNorm BF16 conversion.
+
+    This is rounding from adding/subtracting one, not a blanket norm exemption.
+    GDN gated norms, vision and preserved MTP never qualify.
+    """
+    allowed = name == 'model.language_model.norm.weight'
+    match = re.fullmatch(r'model\.language_model\.layers\.(\d+)\.(input_layernorm|post_attention_layernorm|self_attn\.[qk]_norm)\.weight', name)
+    if match:
+        layer = int(match[1])
+        allowed = layer < 64 and (not match[2].startswith('self_attn') or layer % 4 == 3)
+    if not allowed:
+        return False
+    import torch
+    weight = torch.frombuffer(bytearray(source), dtype=torch.bfloat16)
+    expected = ((weight.float() + 1.0).bfloat16().float() - 1.0).bfloat16()
+    return bool(torch.isfinite(weight).all() and torch.isfinite(expected).all()) and bytes(expected.view(torch.uint8).tolist()) == output
+
+
 def validate(source, output, audit):
     inspected,ok=inspect_checkpoint(output,False)
     if not ok: raise RuntimeError(inspected['errors'])
@@ -76,17 +96,22 @@ def validate(source, output, audit):
         assert all(0<v<0x7f80 for v in values), 'Nonpositive or nonfinite scale: '+name
     assert set(tensors)==expected, {'missing':sorted(expected-set(tensors)), 'extra':sorted(set(tensors)-expected)}
     preserved={}
+    norm_roundtrips={}
     for name,entry in source_tensors.items():
         if name.removesuffix('.weight') in targets: continue
         other=tensors[name]
         assert entry[2]['dtype']==other[2]['dtype'] and entry[2]['shape']==other[2]['shape'], name
         digest=tensor_hash(entry)
-        assert tensor_hash(other)==digest, name
-        preserved[name]=digest
+        output_digest=tensor_hash(other)
+        if output_digest != digest:
+            assert entry[2]['dtype']=='BF16' and offset_norm_roundtrip(name,tensor_bytes(entry),tensor_bytes(other)), name
+            norm_roundtrips[name]={'source_sha256':digest,'output_sha256':output_digest}
+        else:
+            preserved[name]=digest
     assert len([n for n in preserved if n.startswith('mtp.')])==15
     for name in ('preprocessor_config.json','video_preprocessor_config.json'):
         assert (source/name).read_bytes()==(output/name).read_bytes(),name
-    return {'status':'passed','logical_targets':400,'preserved_sha256':preserved,'shard_bytes':inspected['checkpoint']['shard_bytes']}
+    return {'status':'passed','logical_targets':400,'preserved_sha256':preserved,'offset_norm_roundtrip':norm_roundtrips,'shard_bytes':inspected['checkpoint']['shard_bytes']}
 
 
 if __name__=='__main__':
