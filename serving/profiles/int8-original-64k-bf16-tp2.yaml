@@ -1,0 +1,48 @@
+schema_version: 1
+id: int8-original-64k-bf16-tp2
+model_id: int8-original
+recipe: int8-original-v1
+checkpoint_name: Qwen3.8-27B-W8A8-INT8
+image: serving
+hardware:
+  gpu_count: 2
+  gpu_memory_gib: 24
+  compute_capability: '8.6'
+runtime:
+  tensor_parallel_size: 2
+  max_model_len: 65536
+  kv_cache_memory_bytes: 2684354560
+  kv_cache_dtype: bfloat16
+  enforce_eager: false
+  language_model_only: true
+  max_num_batched_tokens: 2048
+  max_num_seqs: 1
+  dtype: bfloat16
+  pipeline_parallel_size: 1
+  cpu_offload_gb: 0
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  speculative_decoding: false
+generation:
+  seed: 42
+  enable_thinking: false
+  generation_config: vllm
+server:
+  served_model_name: qwen38-w8a8
+  enable_auto_tool_choice: true
+  tool_call_parser: qwen3_xml
+  request_logging: false
+environment:
+  VLLM_USE_FLASHINFER_SAMPLER: '0'
+evidence:
+  status: validated_single_sequence
+  reports:
+  - reports/inference-performance-2026-08-30.md
+  origin:
+    repository: gracee3/qwen38-lab
+    commit: 52de78d4c7fc2672a118802e02f742b701f02b37
+    path: Justfile
+  required_log_evidence:
+    quant_scheme: CompressedTensorsW8A8Int8
+    linear_kernel: CutlassInt8ScaledMMLinearKernel
+    exact_pattern: Selected CutlassInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8

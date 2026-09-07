@@ -1,0 +1,177 @@
+{
+  "baseline_commit": "52de78d4c7fc2672a118802e02f742b701f02b37",
+  "dependency_hashes": {
+    "environments/legacy-eval/requirements.in": "20b7406f8973eeb815097573577b0ce28e3b4f041fae969d62bbdd70eaeb40cf",
+    "environments/legacy-eval/requirements.lock": "45353c40934c5665074b37732fdff7fb52350d535f8b35e74dabfd96bcd88daf",
+    "environments/serving/requirements.in": "a62055cc1b97f6b680c9675f0009373121b0d00336114b5694f1a43017942259",
+    "environments/serving/requirements.lock": "c02152726b76487acb897ceb94a0a1f957583c17731a336f955da4f211c94724",
+    "environments/quant/requirements.in": "cac70453e34608a6d2c65eddc98ccf29892a92cf75fc84669b6e4583bfc75ccb",
+    "environments/quant/requirements.lock": "485a93ef70659eb1d9aa21ef8027122987a077f7ce0cddddf4b75e895da32313"
+  },
+  "serving_profiles": {
+    "int8-original-262k-fp8-tp2": {
+      "schema_version": 1,
+      "model": "/models/Qwen3.8-27B-W8A8-INT8",
+      "served_model_name": "qwen38-w8a8",
+      "tensor_parallel_size": 2,
+      "max_model_len": 262144,
+      "kv_cache_memory_bytes": 3221225472,
+      "kv_cache_dtype": "fp8",
+      "seed": 42,
+      "enforce_eager": false,
+      "language_model_only": true,
+      "max_num_batched_tokens": 2048,
+      "max_num_seqs": 1,
+      "enable_thinking": false,
+      "enable_auto_tool_choice": true,
+      "tool_call_parser": "qwen3_xml",
+      "generation_config": "vllm",
+      "request_logging": false,
+      "environment": {
+        "VLLM_USE_FLASHINFER_SAMPLER": "0"
+      },
+      "initial_features": {
+        "mtp": false,
+        "fp8_kv_cache": true,
+        "prefix_caching": true,
+        "chunked_prefill": true,
+        "speculation": false
+      },
+      "required_log_evidence": {
+        "quant_scheme": "CompressedTensorsW8A8Int8",
+        "linear_kernel": "CutlassInt8ScaledMMLinearKernel",
+        "exact_pattern": "Selected CutlassInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8"
+      }
+    },
+    "int8-v2-16k-bf16-tp2": {
+      "schema_version": 1,
+      "model": "/models/Qwen3.8-27B-W8A8-INT8-Agentic-v2",
+      "served_model_name": "qwen38-int8-v2-16k-scored",
+      "tensor_parallel_size": 2,
+      "max_model_len": 16384,
+      "kv_cache_memory_bytes": 805306368,
+      "kv_cache_dtype": "bfloat16",
+      "seed": 42,
+      "enforce_eager": true,
+      "language_model_only": true,
+      "max_num_batched_tokens": 1024,
+      "max_num_seqs": 1,
+      "enable_thinking": false,
+      "enable_auto_tool_choice": true,
+      "tool_call_parser": "qwen3_xml",
+      "generation_config": "vllm",
+      "request_logging": false,
+      "environment": {
+        "VLLM_USE_FLASHINFER_SAMPLER": "0"
+      },
+      "initial_features": {
+        "mtp": false,
+        "fp8_kv_cache": false,
+        "prefix_caching": false,
+        "chunked_prefill": true,
+        "speculation": false
+      },
+      "required_log_evidence": {
+        "quant_scheme": "CompressedTensorsW8A8Int8"
+      },
+      "profile_status": "validated_scored_calibration"
+    },
+    "int4-v1-16k-fp8-tp1": {
+      "schema_version": 1,
+      "model": "/models/Qwen3.8-27B-W4A16-INT4-Expanded400-v1",
+      "served_model_name": "qwen38-int4-v1-16k-scored",
+      "tensor_parallel_size": 1,
+      "max_model_len": 16384,
+      "kv_cache_memory_bytes": 805306368,
+      "kv_cache_dtype": "fp8",
+      "gpu_device": "GPU-613c7d78-a76d-306b-05da-1db1f15a5032",
+      "seed": 42,
+      "enforce_eager": true,
+      "language_model_only": true,
+      "max_num_batched_tokens": 1024,
+      "max_num_seqs": 1,
+      "enable_thinking": false,
+      "enable_auto_tool_choice": true,
+      "tool_call_parser": "qwen3_xml",
+      "generation_config": "vllm",
+      "request_logging": false,
+      "environment": {
+        "VLLM_USE_FLASHINFER_SAMPLER": "0"
+      },
+      "initial_features": {
+        "mtp": false,
+        "fp8_kv_cache": true,
+        "prefix_caching": false,
+        "chunked_prefill": true,
+        "speculation": false
+      },
+      "profile_status": "validated_scored_calibration"
+    },
+    "int4-v1-96k-fp8-tp1": {
+      "schema_version": 1,
+      "model": "/models/Qwen3.8-27B-W4A16-INT4-Expanded400-v1",
+      "served_model_name": "qwen38-int4-v1-fp8",
+      "tensor_parallel_size": 1,
+      "max_model_len": 98304,
+      "kv_cache_memory_bytes": 3758096384,
+      "kv_cache_dtype": "fp8",
+      "gpu_device": "GPU-613c7d78-a76d-306b-05da-1db1f15a5032",
+      "seed": 42,
+      "enforce_eager": false,
+      "language_model_only": true,
+      "max_num_batched_tokens": 2048,
+      "max_num_seqs": 1,
+      "enable_thinking": false,
+      "enable_auto_tool_choice": true,
+      "tool_call_parser": "qwen3_xml",
+      "generation_config": "vllm",
+      "request_logging": false,
+      "environment": {
+        "VLLM_USE_FLASHINFER_SAMPLER": "0"
+      },
+      "initial_features": {
+        "mtp": false,
+        "fp8_kv_cache": true,
+        "prefix_caching": true,
+        "chunked_prefill": true,
+        "speculation": false
+      },
+      "profile_status": "validated_single_sequence"
+    },
+    "int4-v1-96k-fp8-tp2": {
+      "schema_version": 1,
+      "model": "/models/Qwen3.8-27B-W4A16-INT4-Expanded400-v1",
+      "served_model_name": "qwen38-int4-v1-fp8-tp2",
+      "tensor_parallel_size": 2,
+      "max_model_len": 98304,
+      "kv_cache_memory_bytes": 3758096384,
+      "kv_cache_dtype": "fp8",
+      "seed": 42,
+      "enforce_eager": false,
+      "language_model_only": true,
+      "max_num_batched_tokens": 2048,
+      "max_num_seqs": 1,
+      "enable_thinking": false,
+      "enable_auto_tool_choice": true,
+      "tool_call_parser": "qwen3_xml",
+      "generation_config": "vllm",
+      "request_logging": false,
+      "environment": {
+        "VLLM_USE_FLASHINFER_SAMPLER": "0"
+      },
+      "initial_features": {
+        "mtp": false,
+        "fp8_kv_cache": true,
+        "prefix_caching": true,
+        "chunked_prefill": true,
+        "speculation": false
+      },
+      "profile_status": "validated_dual_gpu_single_sequence"
+    }
+  },
+  "quant_recipe_hashes": {
+    "recipes/int8-original-v1/quant.yaml": "6350ed5d27cb568865cc3dfe24ac278980b260a1e8763a683f6a18ae3f1e1a55",
+    "recipes/int8-agentic-v2/quant.yaml": "66f14cd768e2eece26dae90cccc1c76a6935d2eb37f88ac02f81b5f409026487",
+    "recipes/int4-expanded400-v1/quant.yaml": "3c6ae9442a118845a06dcd34b016dafd9e214e134c5d77af93556d27e61d22fd"
+  }
+}

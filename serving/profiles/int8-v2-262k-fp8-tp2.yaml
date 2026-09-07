@@ -1,0 +1,45 @@
+schema_version: 1
+id: int8-v2-262k-fp8-tp2
+model_id: int8-v2
+recipe: int8-agentic-v2
+checkpoint_name: Qwen3.8-27B-W8A8-INT8-Agentic-v2
+image: eval-runtime
+hardware:
+  gpu_count: 2
+  gpu_memory_gib: 24
+  compute_capability: '8.6'
+runtime:
+  tensor_parallel_size: 2
+  max_model_len: 262144
+  kv_cache_memory_bytes: 4831838208
+  kv_cache_dtype: fp8
+  enforce_eager: false
+  language_model_only: true
+  max_num_batched_tokens: 2048
+  max_num_seqs: 1
+  dtype: bfloat16
+  pipeline_parallel_size: 1
+  cpu_offload_gb: 0
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  speculative_decoding: false
+generation:
+  seed: 42
+  enable_thinking: false
+  generation_config: vllm
+server:
+  served_model_name: int8-v2-262k-fp8-tp2
+  enable_auto_tool_choice: true
+  tool_call_parser: qwen3_xml
+  request_logging: false
+environment:
+  VLLM_USE_FLASHINFER_SAMPLER: '0'
+evidence:
+  status: validated_bounded_eval_smoke
+  reports:
+  - reports/int8-v2-262k-smoke-2026-09-07.md
+  origin:
+    repository: gracee3/local-agent-evals
+    commit: d53750eb039568bf8358c9230faf531746d14a83
+    path: benchlib/core.py
+  required_log_evidence: {}

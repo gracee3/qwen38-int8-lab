@@ -1,9 +1,14 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+
 import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'quant/scripts'))
-from validate_int4 import offset_norm_roundtrip
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'quant'))
+from validation.validate_int4 import offset_norm_roundtrip
 
 
 class OffsetNormValidation(unittest.TestCase):

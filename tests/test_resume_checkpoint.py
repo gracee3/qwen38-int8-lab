@@ -1,11 +1,16 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+
 import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'quant/scripts'))
-from resume_checkpoint import Checkpoints, digest
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'quant'))
+from quant.resume_checkpoint import Checkpoints, digest
 
 
 class CheckpointManifestTests(unittest.TestCase):

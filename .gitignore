@@ -15,7 +15,7 @@ __pycache__/
 .cache/
 cache/
 scratch/
-calibration/
+/calibration/data/
 logs/
 offload/
 outputs/
@@ -47,3 +47,5 @@ consolidated*.pth
 benchmarks/raw/
 reports/raw/
 
+*.parquet
+*.arrow

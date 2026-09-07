@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-09-07",
+  "images": {
+    "quant": {
+      "local_tag": "qwen38-int8-lab/quant:0.1.0",
+      "local_image_id": "sha256:7c0ac3089184466e7348dd98ba0219311e69fa32b7395a7674956467a9e02088",
+      "dockerfile": "environments/quant/Dockerfile"
+    },
+    "serving": {
+      "local_tag": "qwen38-int8-lab/vllm:0.1.0",
+      "local_image_id": "sha256:60508d8dcbbb0a985955e9cf2f66e561a66c3f1c99bd7ec8fa5020e991a0ef4d",
+      "dockerfile": "environments/serving/Dockerfile"
+    },
+    "serving-fp8-sm86": {
+      "local_tag": "qwen38-int8-lab/vllm-fp8-sm86:0.1.0",
+      "local_image_id": "sha256:7342f4366654b375470b105a5089262455046a04fe17c80c90adfe99fb9a37ba",
+      "dockerfile": "environments/serving-fp8-sm86/Dockerfile"
+    },
+    "legacy-eval": {
+      "local_tag": "qwen38-int8-lab/eval:0.1.0",
+      "local_image_id": "sha256:c314ecf8b7e2b5d0067d6703f5bf55a939d35965e0da33efb91a4ed7ee2e0804",
+      "dockerfile": "environments/legacy-eval/Dockerfile"
+    },
+    "eval-runtime": {
+      "local_tag": "local-agent-evals/runtime:0.1.0",
+      "local_image_id": "sha256:1fdc456dc95eefd909e1a7a3e9aedf3eb28ec1b9be3c56363eee4abb6d68b537",
+      "owner": "gracee3/local-agent-evals",
+      "source_commit": "d53750eb039568bf8358c9230faf531746d14a83",
+      "dockerfile": "docker/Dockerfile"
+    }
+  }
+}

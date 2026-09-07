@@ -10,7 +10,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "eval" / "scripts"
+SCRIPTS = ROOT / "validation" / "legacy_eval" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 
@@ -55,7 +55,7 @@ class DatasetPinTests(unittest.TestCase):
 
 class SuitePolicyTests(unittest.TestCase):
     def setUp(self):
-        with (ROOT / "eval/config/leaderboard-v2.yaml").open(encoding="utf-8") as handle:
+        with (ROOT / "validation/legacy_eval/config/leaderboard-v2.yaml").open(encoding="utf-8") as handle:
             self.config = yaml.safe_load(handle)
 
     def test_exact_harness_and_dataset_pins(self):
@@ -100,7 +100,7 @@ class SuitePolicyTests(unittest.TestCase):
         self.assertEqual(paired, ["mmlu_pro", "bbh", "gpqa", "musr"])
 
     def test_eval_lock_contains_direct_contract(self):
-        lock = (ROOT / "docker/eval/requirements.lock").read_text(encoding="utf-8")
+        lock = (ROOT / "environments/legacy-eval/requirements.lock").read_text(encoding="utf-8")
         self.assertIn("lm_eval==0.4.12\n", lock)
         self.assertIn("antlr4-python3-runtime==4.11.0\n", lock)
         for line in lock.splitlines():
@@ -108,7 +108,7 @@ class SuitePolicyTests(unittest.TestCase):
                 self.assertIn("==", line)
 
     def test_supervisor_scope_preserves_paired_gates_and_candidate_only_path(self):
-        supervisor = (ROOT / "scripts/accuracy_eval_supervisor.sh").read_text(
+        supervisor = (ROOT / "validation/legacy_eval/supervisor.sh").read_text(
             encoding="utf-8"
         )
         memory_gate = supervisor.index("run_runtime_gate\n")
@@ -130,7 +130,7 @@ class SuitePolicyTests(unittest.TestCase):
 
 class RuntimeGateTests(unittest.TestCase):
     def setUp(self):
-        with (ROOT / "eval/config/leaderboard-v2.yaml").open(encoding="utf-8") as handle:
+        with (ROOT / "validation/legacy_eval/config/leaderboard-v2.yaml").open(encoding="utf-8") as handle:
             self.config = yaml.safe_load(handle)
 
     def test_error_logging_redacts_exception_message(self):
@@ -231,7 +231,7 @@ class AggregationTests(unittest.TestCase):
                 json.dumps({"evaluation_scope": "candidate-only"}), encoding="utf-8"
             )
             config = yaml.safe_load(
-                (ROOT / "eval/config/leaderboard-v2.yaml").read_text(encoding="utf-8")
+                (ROOT / "validation/legacy_eval/config/leaderboard-v2.yaml").read_text(encoding="utf-8")
             )
             for name, task in config["tasks"].items():
                 results = run_root / "stages" / f"w8a8-{name}" / "results"

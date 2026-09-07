@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "int8-original-v1",
+  "model_id": "int8-original",
+  "checkpoint_name": "Qwen3.8-27B-W8A8-INT8",
+  "build_commit": "44e4742a46f63830ea180122d0ae293c0fbefc46",
+  "source_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+  "source_audit": "reports/int4-expanded400-source-audit-2026-09-06.json",
+  "quant_config": "quant.yaml",
+  "quant_config_sha256": "67905158118e24001909eeba4fa3012d2a8681f307cafe2ad9ab7bf5cc4073db",
+  "quant_environment": "quant",
+  "logical_targets": 256,
+  "calibration": {
+    "sequences": 512,
+    "dataset": "HuggingFaceH4/ultrachat_200k",
+    "revision": "8049631c405ae6576f93f445c6b8166f76f5505a",
+    "split": "train_sft",
+    "seed": 42
+  },
+  "evidence": [
+    "reports/quality-candidate-2026-08-25.md"
+  ],
+  "artifact_metadata": {
+    "config.json": {
+      "sha256": "0d0a48346b1f83d42287ffa6c7325f9b952bdb0c956ff2509adcea939638584f",
+      "size_bytes": 29913
+    },
+    "model.safetensors.index.json": {
+      "sha256": "c23ca0c15ef14b18f32a289d10e6afeccbc43df69627b71d976325b6710261a8",
+      "size_bytes": 138118
+    },
+    "recipe.yaml": {
+      "sha256": "8617954603e216b085555fb2e1940fa1ac854e6a3c2040630b8cf82ed0e08d2c",
+      "size_bytes": 355
+    }
+  },
+  "weight_identity": "See the build report and retained full manifests; metadata hashes below are not full weight hashes."
+}

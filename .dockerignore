@@ -6,7 +6,7 @@
 .cache
 cache
 scratch
-calibration
+calibration/data
 logs
 outputs
 artifacts
@@ -22,3 +22,5 @@ artifacts
 *.log
 benchmarks/raw
 reports/raw
+*.parquet
+*.arrow

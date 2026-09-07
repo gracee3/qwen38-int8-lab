@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "int8-agentic-v2",
+  "model_id": "int8-v2",
+  "checkpoint_name": "Qwen3.8-27B-W8A8-INT8-Agentic-v2",
+  "build_commit": "cecc0969478538511409ac052db0acb863f1b9a2",
+  "source_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+  "source_audit": "reports/int4-expanded400-source-audit-2026-09-06.json",
+  "quant_config": "quant.yaml",
+  "quant_config_sha256": "c7c17ebe31f43eefa8283d8aa8855f6db7407323b4dafda58bf0de02fcaf9ad7",
+  "quant_environment": "quant",
+  "logical_targets": 256,
+  "calibration": {
+    "sequences": 307,
+    "total_tokens": 1371502,
+    "retained_manifest_sha256": "e3f33603a21c8d3f7dad3844773dc334b2e1911373bcdaccbe3c80d1de0fc60f",
+    "retained_payloads": {
+      "calibration.parquet": {
+        "sha256": "8ac9febc9ce8b59574da2eb5966b36a178a6132c9c8de1565c4cbb0594661e8e",
+        "size_bytes": 5491791
+      }
+    },
+    "limitations": [
+      "Original manifest has null dataset revisions.",
+      "Nemotron-Agentic contributed zero samples.",
+      "Reproduction requires retained frozen corpus; rerunning preparation is not claimed equivalent."
+    ]
+  },
+  "evidence": [
+    "reports/agentic-w8a8-v2-quantized-2026-09-06.md"
+  ],
+  "artifact_metadata": {
+    "config.json": {
+      "sha256": "0d0a48346b1f83d42287ffa6c7325f9b952bdb0c956ff2509adcea939638584f",
+      "size_bytes": 29913
+    },
+    "model.safetensors.index.json": {
+      "sha256": "c23ca0c15ef14b18f32a289d10e6afeccbc43df69627b71d976325b6710261a8",
+      "size_bytes": 138118
+    },
+    "recipe.yaml": {
+      "sha256": "8617954603e216b085555fb2e1940fa1ac854e6a3c2040630b8cf82ed0e08d2c",
+      "size_bytes": 355
+    }
+  },
+  "weight_identity": "See the build report and retained full manifests; metadata hashes below are not full weight hashes."
+}

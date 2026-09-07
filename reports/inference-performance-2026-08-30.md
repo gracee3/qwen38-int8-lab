@@ -35,6 +35,6 @@ The seven decode observations have a mean of 39.0537 tok/s, median of 39.0534 to
 
 ## Evidence and boundaries
 
-The complete per-request JSON is `/data/qwen38-int8-lab/results/benchmark-suite-defaults-20260830T004833Z.json`; the authenticated deterministic smoke result is under `/data/qwen38-int8-lab/results/inference-smoke-defaults-20260830T004808Z.json`. The benchmark harness is `inference/scripts/benchmark.py`.
+The complete per-request JSON is `/data/qwen38-int8-lab/results/benchmark-suite-defaults-20260830T004833Z.json`; the authenticated deterministic smoke result is under `/data/qwen38-int8-lab/results/inference-smoke-defaults-20260830T004808Z.json`. The benchmark harness is `validation/benchmark.py`.
 
 This supports a throughput claim only for the exact host, model artifact, runtime image, and single-sequence settings above. It does not establish concurrent serving throughput, vision performance, 64K retrieval quality, or standardized accuracy. The 65,536-token setting is a validated serving-capacity default, not a long-context quality result. A speculative MTP trial accepted 0 of 1,524 drafted tokens, so MTP is intentionally excluded from both the default and the performance claim.

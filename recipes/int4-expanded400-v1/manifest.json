@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "int4-expanded400-v1",
+  "model_id": "int4-v1",
+  "checkpoint_name": "Qwen3.8-27B-W4A16-INT4-Expanded400-v1",
+  "build_commit": "9628c4e45a60913dfa9f6e234a8c56ffd8b52eb8",
+  "source_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+  "source_audit": "reports/int4-expanded400-source-audit-2026-09-06.json",
+  "quant_config": "quant.yaml",
+  "quant_config_sha256": "e781c5f47aa55e6dffb68ec6ab2b65e819ef809835ea8dddfcdb9a231e6b4b40",
+  "quant_environment": "quant",
+  "logical_targets": 400,
+  "calibration": {
+    "sequences": 423,
+    "total_tokens": 1537643,
+    "retained_manifest_sha256": "1eafdbd9e96313e6bd79ccd71ced466996f13257a8265308ef23f1ebf7620cb0",
+    "retained_payloads": {
+      "calibration.parquet": {
+        "sha256": "f30e029e118eb337a724f44d279994915db43dbddaaab4ade6227a148b4fe107",
+        "size_bytes": 12390626
+      }
+    },
+    "corpus_sha256": "f30e029e118eb337a724f44d279994915db43dbddaaab4ade6227a148b4fe107",
+    "overlap_clearance": "reports/int4-overlap-clearance-2026-09-06.json"
+  },
+  "evidence": [
+    "reports/int4-v1-milestone-2026-09-07.md"
+  ],
+  "artifact_metadata": {
+    "config.json": {
+      "sha256": "1eee07d9a9881350589c2687bd4eb3464bd785241c8fdcceff3bbe563762872a",
+      "size_bytes": 44982
+    },
+    "model.safetensors.index.json": {
+      "sha256": "59b4708834ae4deb21ab885e1cf3cad1242d7ea855d32969ae811b059b21df78",
+      "size_bytes": 198239
+    },
+    "recipe.yaml": {
+      "sha256": "49275007406efa3db873c933d9024e5330f7f1d0df61ad141842a5849ac2d4d2",
+      "size_bytes": 21458
+    }
+  },
+  "weight_identity": "See the build report and retained full manifests; metadata hashes below are not full weight hashes."
+}

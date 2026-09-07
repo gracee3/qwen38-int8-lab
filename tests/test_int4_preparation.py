@@ -1,9 +1,14 @@
+
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+
 import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'quant/scripts'))
-from prepare_int4_corpus import coherent_prefixes, messages_for
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'quant'))
+from calibration.prepare_int4_corpus import coherent_prefixes, messages_for
 
 
 class ConversationIntegrity(unittest.TestCase):
