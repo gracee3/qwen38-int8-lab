@@ -8,7 +8,7 @@ resume=${2:-}
 [[ -z $resume || $stage == real-pilot || $stage == full ]] || { echo '--resume requires real-pilot or full' >&2; exit 2; }
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 run_root=${INT4_RUN_ROOT:-/data/qwen38-int8-lab/int4-v1}
-gpu=GPU-2b2f26e4-eb5d-dd9d-1dbd-2857fd357225
+gpu=${INT4_GPU_UUID:-GPU-613c7d78-a76d-306b-05da-1db1f15a5032}
 quant=sha256:7c0ac3089184466e7348dd98ba0219311e69fa32b7395a7674956467a9e02088
 runtime=sha256:60508d8dcbbb0a985955e9cf2f66e561a66c3f1c99bd7ec8fa5020e991a0ef4d
 mkdir -p "$run_root"
